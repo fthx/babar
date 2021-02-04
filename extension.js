@@ -19,6 +19,7 @@ const WM = global.workspace_manager;
 var WORKSPACES_SCHEMA = "org.gnome.desktop.wm.preferences";
 var WORKSPACES_KEY = "workspace-names";
 var FAVORITES_ICON_NAME = 'starred-symbolic';
+var DISPLAY_APP_GRID = true;
 var ICON_SIZE = 20;
 var HIDDEN_OPACITY = 127;
 var UNFOCUSED_OPACITY = 255;
@@ -28,8 +29,22 @@ var DISPLAY_FAVORITES = true;
 var DISPLAY_TASKS = true;
 
 
-var FavoritesBar = GObject.registerClass(
-class FavoritesBar extends PanelMenu.Button {
+var AppGridButton = GObject.registerClass(
+class AppGridButton extends PanelMenu.Button {
+	_init() {
+		super._init(0.0, 'Babar-AppGrid');
+		
+		this.app_grid_button = new St.BoxLayout({visible: true, reactive: true, can_focus: true, track_hover: true});
+		this.app_grid_button.icon = new St.Icon({ icon_name: 'view-app-grid-symbolic', style_class: 'system-status-icon' });
+        this.app_grid_button.add_child(this.app_grid_button.icon);
+        this.app_grid_button.connect('button-press-event', () => Main.overview.viewSelector._toggleAppsPage());
+        this.add_child(this.app_grid_button);
+	}
+});
+
+
+var FavoritesMenu = GObject.registerClass(
+class FavoritesMenu extends PanelMenu.Button {
 	_init() {
 		super._init(0.0, 'Babar-Favorites');
 		
@@ -86,7 +101,6 @@ class FavoritesBar extends PanelMenu.Button {
 		super.destroy();
 	}
 });
-
 
 var WorkspacesBar = GObject.registerClass(
 class WorkspacesBar extends PanelMenu.Button {
@@ -163,7 +177,9 @@ class WorkspacesBar extends PanelMenu.Button {
 	        this.ws_current.windows = this.ws_current.list_windows().sort(this._sort_windows);
 	        for (let window_index = 0; window_index < this.ws_current.windows.length; ++window_index) {
 	        	this.window = this.ws_current.windows[window_index];
-	        	this._create_window_button(ws_index, this.window);
+	        	if (this.window) {
+	        		this._create_window_button(ws_index, this.window);
+	        	}
 	        }
 		}
     }
@@ -174,23 +190,21 @@ class WorkspacesBar extends PanelMenu.Button {
 		    // create button
 			this.w_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
 			this.w_box.connect('button-press-event', () => this._toggle_window(ws_index, window));
-			//this.w_box.connect('notify::hover', this._on_button_hover.bind(this));
 		    this.w_box.app = this.window_tracker.get_window_app(window);
 		    this.w_box.icon = this.w_box.app.create_icon_texture(ICON_SIZE);
 		    
-			// set icon style & opacity following window state
+			// set icon style and opacity following window state
 		    if (window.is_hidden()) {
 				this.w_box.style_class = 'window-hidden';
 				this.w_box.icon.set_opacity(HIDDEN_OPACITY);
-		    }
-		    else {
-		    	 if (window.has_focus()) {
-		    	 	this.w_box.style_class = 'window-focused';
-		    	 	this.w_box.icon.set_opacity(FOCUSED_OPACITY);
-		    	 } else {
-		    	 	this.w_box.style_class = 'window-unfocused';
-		    	 	this.w_box.icon.set_opacity(UNFOCUSED_OPACITY);
-		    	 }
+		    } else {
+				if (window.has_focus()) {
+				this.w_box.style_class = 'window-focused';
+				this.w_box.icon.set_opacity(FOCUSED_OPACITY);
+				} else {
+				this.w_box.style_class = 'window-unfocused';
+				this.w_box.icon.set_opacity(UNFOCUSED_OPACITY);
+				}
 		    }
         
 		    // add button in task bar
@@ -205,9 +219,9 @@ class WorkspacesBar extends PanelMenu.Button {
 	
 	// switch to workspace and toggle window
     _toggle_window(ws_index, window) {
-        if (WM.get_active_workspace_index() == ws_index && window.has_focus() && !(Main.overview.visible)) {
-       		window.minimize();
-       	} else {	
+	    if (WM.get_active_workspace_index() == ws_index && window.has_focus() && !(Main.overview.visible)) {
+	   		window.minimize();
+	   	} else {	
 			window.activate(global.get_current_time());
 		}
 		if (Main.overview.visible) {
@@ -258,21 +272,34 @@ class Extension {
 			AppMenu.container.hide();
 		}
 		
-		if (DISPLAY_FAVORITES) {
-			this.favorites_bar = new FavoritesBar();
-			Main.panel.addToStatusArea('babar-favorites-bar', this.favorites_bar, 0, 'left');
+		// display app grid
+		if (DISPLAY_APP_GRID) {
+			this.app_grid = new AppGridButton();
+			Main.panel.addToStatusArea('babar-app-grid-button', this.app_grid, 0, 'left');
 		}
 		
+		// display favorites
+		if (DISPLAY_FAVORITES) {
+			this.favorites_menu = new FavoritesMenu();
+			Main.panel.addToStatusArea('babar-favorites-menu', this.favorites_menu, 1, 'left');
+		}
+		
+		// display tasks
 		if (DISPLAY_TASKS) {
 			this.workspaces_bar = new WorkspacesBar();
-			Main.panel.addToStatusArea('babar-workspaces-bar', this.workspaces_bar, 1, 'left');
+			Main.panel.addToStatusArea('babar-workspaces-bar', this.workspaces_bar, 2, 'left');
 		}
     }
 
     disable() {
-    	if (this.favorites_bar) {
-    		this.favorites_bar._destroy();
+    	if (this.app_grid) {
+    		this.app_grid.destroy();
     	}
+    	
+    	if (this.favorites_menu) {
+    		this.favorites_menu._destroy();
+    	}
+    	
     	if (this.workspaces_bar) {
     		this.workspaces_bar._destroy();
     	}
