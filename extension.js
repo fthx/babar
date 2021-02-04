@@ -308,7 +308,10 @@ class Extension {
     	this._show_activities(true);
     	
     	// restore AppMenu icon
-		AppMenu.container.show();
+    	if (!Main.overview.visible && !Main.sessionMode.isLocked) {
+			AppMenu.container.show();
+		}
+		
     }
 }
 
