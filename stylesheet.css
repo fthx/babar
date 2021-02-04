@@ -1,0 +1,58 @@
+.workspace-active {
+  margin-left: 16px;
+  margin-right: 12px;
+  background-color: rgba(204, 204, 204, 1);
+  color: rgba(0, 0, 0, 1);
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  border-radius: 2px;
+}
+
+.workspace-inactive {
+  margin-left: 16px;
+  margin-right: 12px;
+  background-color: rgba(127, 127, 127, 1);
+  color: rgba(0, 0, 0, 1);
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  border-radius: 2px;
+}
+
+.favorite {
+  margin-left: 0px;
+  margin-right: 0px;
+  padding: 0px;
+  spacing: 16px;
+}
+
+.window-focused {
+  margin-left: 0px;
+  margin-right: 6px;
+  border-radius: 0px;
+  padding: 0px;
+  border-top: 2px solid rgba(255, 255, 255, 0.8);
+  border-right: 0px hidden;
+  border-bottom: 2px hidden;
+  border-left: 0px hidden;
+}
+
+.window-unfocused {
+  margin-left: 0px;
+  margin-right: 6px;
+  border-radius: 0px;
+  padding: 0px;
+  border-top: 2px solid rgba(255, 255, 255, 0);
+  border-right: 0px hidden;
+  border-bottom: 2px hidden;
+  border-left: 0px hidden;
+}
+
+.window-hidden {
+  margin-left: 0px;
+  margin-right: 6px;
+  border-radius: 0px;
+  padding: 0px;
+  border-top: 2px solid rgba(255, 255, 255, 0);
+  border-right: 0px hidden;
+  border-bottom: 2px hidden;
+  border-left: 0px hidden;
+}
+
