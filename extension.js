@@ -191,7 +191,9 @@ class WorkspacesBar extends PanelMenu.Button {
 			this.w_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
 			this.w_box.connect('button-press-event', () => this._toggle_window(ws_index, window));
 		    this.w_box.app = this.window_tracker.get_window_app(window);
-		    this.w_box.icon = this.w_box.app.create_icon_texture(ICON_SIZE);
+		    if (this.w_box.app) {
+		    	this.w_box.icon = this.w_box.app.create_icon_texture(ICON_SIZE);
+		    }
 		    
 			// set icon style and opacity following window state
 		    if (window.is_hidden()) {
