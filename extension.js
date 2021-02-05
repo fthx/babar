@@ -6,7 +6,7 @@
 */
 
 
-const { Clutter, Gio, GObject, Shell, St } = imports.gi;
+const { Clutter, Gio, GObject, Meta, Shell, St } = imports.gi;
 
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
@@ -186,6 +186,12 @@ class WorkspacesBar extends PanelMenu.Button {
     
     // create window button
     _create_window_button(ws_index, window) {
+      if ([
+        Meta.WindowType.DROPDOWN_MENU,
+        Meta.WindowType.MODAL_DIALOG,
+      ].includes(window.window_type)) {
+        return;
+      }
     	if (!window.is_on_all_workspaces() || ws_index == 0) {
 		    // create button
 			this.w_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
