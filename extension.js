@@ -212,7 +212,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		    
 		    // sometimes no icon is defined
 		    if (!this.w_box.icon) {
-				this.w_box_icon = this.fallback_icon;
+				this.w_box.icon = this.fallback_icon;
 			}
 		    
 			// set icon style and opacity following window state
