@@ -119,7 +119,10 @@ class WorkspacesBar extends PanelMenu.Button {
 		// define gsettings schema for workspaces names, get workspaces names, signal for settings key changed
 		this.workspaces_settings = new Gio.Settings({ schema: WORKSPACES_SCHEMA });
 		this.workspaces_names_changed = this.workspaces_settings.connect(`changed::${WORKSPACES_KEY}`, this._update_workspaces_names.bind(this));
-	
+		
+		// fallback icon
+		this.fallback_icon = new St.Icon({icon_name: 'action-unavailable-symbolic', style_class: 'system-status-icon'});
+		
 		// bar creation
 		this.ws_bar = new St.BoxLayout({});
         this._update_workspaces_names();
@@ -206,6 +209,11 @@ class WorkspacesBar extends PanelMenu.Button {
 		    if (this.w_box.app) {
 		    	this.w_box.icon = this.w_box.app.create_icon_texture(ICON_SIZE);
 		    }
+		    
+		    // sometimes no icon is defined
+		    if (!this.w_box.icon) {
+				this.w_box_icon = this.fallback_icon;
+			}
 		    
 			// set icon style and opacity following window state
 		    if (window.is_hidden()) {
