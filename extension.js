@@ -1,7 +1,7 @@
 /* 
 	BaBar
-	Copyright Francois Thirioux 2021
-	GitHub contributors: @fthx
+	by Francois Thirioux
+	GitHub contributors: @fthx, @wooque
 	License GPL v3
 */
 
@@ -15,6 +15,11 @@ const AppFavorites = imports.ui.appFavorites;
 const AppMenu = Main.panel.statusArea.appMenu;
 const WM = global.workspace_manager;
 
+// translation needed to restore Places label, if any
+const Gettext = imports.gettext.domain('gnome-shell-extensions');
+const _ = Gettext.gettext;
+const N_ = x => x;
+
 
 var WORKSPACES_SCHEMA = "org.gnome.desktop.wm.preferences";
 var WORKSPACES_KEY = "workspace-names";
@@ -27,6 +32,7 @@ var FOCUSED_OPACITY = 255;
 var HIDE_APP_MENU = true;
 var DISPLAY_FAVORITES = true;
 var DISPLAY_TASKS = true;
+var DISPLAY_PLACES_ICON = true;
 
 
 var AppGridButton = GObject.registerClass(
@@ -186,12 +192,12 @@ class WorkspacesBar extends PanelMenu.Button {
     
     // create window button
     _create_window_button(ws_index, window) {
-      if ([
-        Meta.WindowType.DROPDOWN_MENU,
-        Meta.WindowType.MODAL_DIALOG,
-      ].includes(window.window_type)) {
-        return;
-      }
+    	// don't make a button for dropdown menu or modal dialog
+    	if ([Meta.WindowType.DROPDOWN_MENU, Meta.WindowType.MODAL_DIALOG].includes(window.window_type)) {
+        	return;
+        }
+        
+        // windows on all workspaces have to be displayed only once
     	if (!window.is_on_all_workspaces() || ws_index == 0) {
 		    // create button
 			this.w_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
@@ -270,6 +276,24 @@ class Extension {
 			}
 		}
 	}
+	
+	// toggle Places Status Indicator extension label to folder
+	_show_places_icon(show_icon) {
+		this.places_indicator = Main.panel.statusArea['places-menu'];
+		if (this.places_indicator) {
+			this.places_indicator.remove_child(this.places_indicator.get_first_child());
+			this.places_box = new St.BoxLayout({style_class: 'panel-status-menu-box'});
+			if (show_icon) {
+				this.places_icon = new St.Icon({icon_name: 'folder-symbolic', style_class: 'system-status-icon'});
+				this.places_box.add_child(this.places_icon);
+			} else {
+				this.places_label = new St.Label({text: _('Places'), y_expand: true,y_align: Clutter.ActorAlign.CENTER});
+				this.places_box.add_child(this.places_label);
+			}
+			this.places_box.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
+			this.places_indicator.add_actor(this.places_box);
+		}
+	}
 
     enable() {
     	// hide Activities button
@@ -278,6 +302,14 @@ class Extension {
     	// hide AppMenu
     	if (HIDE_APP_MENU) {
 			AppMenu.container.hide();
+		}
+		
+		// if Places extension is installed, change label to icon
+		if (DISPLAY_PLACES_ICON) {
+			this._show_places_icon(true);
+			
+			// watch if extension is enabled after BaBar
+			this.extensions_changed = Main.extensionManager.connect('extension-state-changed', () => this._show_places_icon(true));
 		}
 		
 		// display app grid
@@ -289,13 +321,13 @@ class Extension {
 		// display favorites
 		if (DISPLAY_FAVORITES) {
 			this.favorites_menu = new FavoritesMenu();
-			Main.panel.addToStatusArea('babar-favorites-menu', this.favorites_menu, 1, 'left');
+			Main.panel.addToStatusArea('babar-favorites-menu', this.favorites_menu, 4, 'left');
 		}
 		
 		// display tasks
 		if (DISPLAY_TASKS) {
 			this.workspaces_bar = new WorkspacesBar();
-			Main.panel.addToStatusArea('babar-workspaces-bar', this.workspaces_bar, 2, 'left');
+			Main.panel.addToStatusArea('babar-workspaces-bar', this.workspaces_bar, 5, 'left');
 		}
     }
 
@@ -310,6 +342,12 @@ class Extension {
     	
     	if (this.workspaces_bar) {
     		this.workspaces_bar._destroy();
+    	}
+    	
+    	// if any, restore Places label and unwatch extensions changes
+    	if (this.places_indicator && DISPLAY_PLACES_ICON) {
+    		this._show_places_icon(false);
+    		Main.extensionManager.disconnect(this.extensions_changed);
     	}
     	
     	// restore Activities button
