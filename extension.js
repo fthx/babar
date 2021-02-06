@@ -6,7 +6,7 @@
 */
 
 
-const { Clutter, Gio, GObject, Meta, Shell, St } = imports.gi;
+const { Clutter, Gio, GLib, GObject, Meta, Shell, St } = imports.gi;
 
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
@@ -26,6 +26,8 @@ var WORKSPACES_KEY = "workspace-names";
 var FAVORITES_ICON_NAME = 'starred-symbolic';
 var DISPLAY_APP_GRID = true;
 var ICON_SIZE = 20;
+var TOOLTIP_TIMEOUT = 1;
+var TOOLTIP_VERTICAL_DELTA = 10;
 var HIDDEN_OPACITY = 127;
 var UNFOCUSED_OPACITY = 255;
 var FOCUSED_OPACITY = 255;
@@ -128,6 +130,13 @@ class WorkspacesBar extends PanelMenu.Button {
         this._update_workspaces_names();
         this.add_child(this.ws_bar);
         
+        // window button tooltip creation
+        this.window_tooltip = new St.BoxLayout({style_class: 'window-tooltip'});
+		this.window_tooltip.label = new St.Label({y_align: Clutter.ActorAlign.CENTER, text: ""});
+		this.window_tooltip.add_child(this.window_tooltip.label);
+		this.window_tooltip.hide();
+		Main.layoutManager.addChrome(this.window_tooltip);
+        
         // signals
 		this._ws_number_changed = WM.connect('notify::n-workspaces', this._update_ws.bind(this));
 		this._restacked = global.display.connect('restacked', this._update_ws.bind(this));
@@ -140,6 +149,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		WM.disconnect(this._ws_number_changed);
 		global.display.disconnect(this._restacked);
 		global.display.disconnect(this._window_left_monitor);
+		GLib.source_remove(this.window_tooltip_timeout);
 		this.ws_bar.destroy();
 		super.destroy();
 	}
@@ -169,9 +179,6 @@ class WorkspacesBar extends PanelMenu.Button {
 			} else {
 				this.ws_box.label.style_class = 'workspace-inactive';
 			}
-			if (ws_index == 0) {
-				this.ws_box.label.set_style('margin-left: 0px');
-			}
 			if (this.workspaces_names[ws_index]) {
 				this.ws_box.label.set_text("  " + this.workspaces_names[ws_index] + "  ");
 			} else {
@@ -193,7 +200,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		}
     }
     
-    // create window button
+    // create window button ; ws = workspace, w = window
     _create_window_button(ws_index, window) {
     	// don't make a button for dropdown menu or modal dialog
     	if ([Meta.WindowType.DROPDOWN_MENU, Meta.WindowType.MODAL_DIALOG].includes(window.window_type)) {
@@ -205,6 +212,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		    // create button
 			this.w_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
 			this.w_box.connect('button-press-event', () => this._toggle_window(ws_index, window));
+			this.w_box.connect('notify::hover', () => this._show_tooltip(this.ws_bar.get_transformed_position()[0], window.title));
 		    this.w_box.app = this.window_tracker.get_window_app(window);
 		    if (this.w_box.app) {
 		    	this.w_box.icon = this.w_box.app.create_icon_texture(ICON_SIZE);
@@ -259,13 +267,24 @@ class WorkspacesBar extends PanelMenu.Button {
     	return window1.get_id() - window2.get_id();
     }
 
-    // activate workspace or show overview
+    // toggle or show overview
     _toggle_ws(ws_index) {
 		if (ws_index == WM.get_active_workspace_index()) {
 			Main.overview.toggle();
 		} else {
 			WM.get_workspace_by_index(ws_index).activate(global.get_current_time());
+			Main.overview.show();
 		}
+    }
+    
+    // show window tooltip
+    _show_tooltip(position, window_title) {
+    	this.window_tooltip.set_position(position, Main.layoutManager.primaryMonitor.y + Main.panel.height + TOOLTIP_VERTICAL_DELTA);
+		this.window_tooltip.label.set_text(window_title);
+		this.window_tooltip.show();
+		this.window_tooltip_timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, TOOLTIP_TIMEOUT, () => {
+			this.window_tooltip.hide();
+		});
     }
 });
 

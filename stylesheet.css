@@ -56,3 +56,14 @@
   border-left: 0px hidden;
 }
 
+.window-tooltip {
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  border-radius: 2px;
+}
+
