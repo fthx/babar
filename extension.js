@@ -26,7 +26,6 @@ var WORKSPACES_KEY = "workspace-names";
 var FAVORITES_ICON_NAME = 'starred-symbolic';
 var DISPLAY_APP_GRID = true;
 var ICON_SIZE = 20;
-var TOOLTIP_TIMEOUT = 1;
 var TOOLTIP_VERTICAL_DELTA = 10;
 var HIDDEN_OPACITY = 127;
 var UNFOCUSED_OPACITY = 255;
@@ -149,7 +148,6 @@ class WorkspacesBar extends PanelMenu.Button {
 		WM.disconnect(this._ws_number_changed);
 		global.display.disconnect(this._restacked);
 		global.display.disconnect(this._window_left_monitor);
-		GLib.source_remove(this.window_tooltip_timeout);
 		this.ws_bar.destroy();
 		super.destroy();
 	}
@@ -172,21 +170,21 @@ class WorkspacesBar extends PanelMenu.Button {
 		// display all current workspaces and tasks buttons
         for (let ws_index = 0; ws_index < this.ws_count; ++ws_index) {
         	// workspace
-			this.ws_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});						
-			this.ws_box.label = new St.Label({y_align: Clutter.ActorAlign.CENTER});
+			var ws_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});						
+			ws_box.label = new St.Label({y_align: Clutter.ActorAlign.CENTER});
 			if (ws_index == this.active_ws_index) {
-				this.ws_box.label.style_class = 'workspace-active';
+				ws_box.label.style_class = 'workspace-active';
 			} else {
-				this.ws_box.label.style_class = 'workspace-inactive';
+				ws_box.label.style_class = 'workspace-inactive';
 			}
 			if (this.workspaces_names[ws_index]) {
-				this.ws_box.label.set_text("  " + this.workspaces_names[ws_index] + "  ");
+				ws_box.label.set_text("  " + this.workspaces_names[ws_index] + "  ");
 			} else {
-				this.ws_box.label.set_text("  " + (ws_index + 1) + "  ");
+				ws_box.label.set_text("  " + (ws_index + 1) + "  ");
 			}
-			this.ws_box.set_child(this.ws_box.label);
-			this.ws_box.connect('button-press-event', () => this._toggle_ws(ws_index));
-	        this.ws_bar.add_child(this.ws_box);
+			ws_box.set_child(ws_box.label);
+			ws_box.connect('button-press-event', () => this._toggle_ws(ws_index));
+	        this.ws_bar.add_child(ws_box);
 	        
 	        // tasks
 	        this.ws_current = WM.get_workspace_by_index(ws_index);
@@ -202,6 +200,8 @@ class WorkspacesBar extends PanelMenu.Button {
     
     // create window button ; ws = workspace, w = window
     _create_window_button(ws_index, window) {
+    	var w_box;
+    	
     	// don't make a button for dropdown menu or modal dialog
     	if ([Meta.WindowType.DROPDOWN_MENU, Meta.WindowType.MODAL_DIALOG].includes(window.window_type)) {
         	return;
@@ -210,39 +210,39 @@ class WorkspacesBar extends PanelMenu.Button {
         // windows on all workspaces have to be displayed only once
     	if (!window.is_on_all_workspaces() || ws_index == 0) {
 		    // create button
-			this.w_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
-			this.w_box.connect('button-press-event', () => this._toggle_window(ws_index, window));
-			this.w_box.connect('notify::hover', () => this._show_tooltip(this.ws_bar.get_transformed_position()[0], window.title));
-		    this.w_box.app = this.window_tracker.get_window_app(window);
-		    if (this.w_box.app) {
-		    	this.w_box.icon = this.w_box.app.create_icon_texture(ICON_SIZE);
+			w_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
+			w_box.connect('button-press-event', () => this._toggle_window(ws_index, window));
+			w_box.connect('notify::hover', () => this._show_tooltip(w_box, window.title));
+		    w_box.app = this.window_tracker.get_window_app(window);
+		    if (w_box.app) {
+		    	w_box.icon = w_box.app.create_icon_texture(ICON_SIZE);
 		    }
 		    
 		    // sometimes no icon is defined
-		    if (!this.w_box.icon) {
-				this.w_box.icon = this.fallback_icon;
+		    if (!w_box.icon) {
+				w_box.icon = this.fallback_icon;
 			}
 		    
 			// set icon style and opacity following window state
 		    if (window.is_hidden()) {
-				this.w_box.style_class = 'window-hidden';
-				this.w_box.icon.set_opacity(HIDDEN_OPACITY);
+				w_box.style_class = 'window-hidden';
+				w_box.icon.set_opacity(HIDDEN_OPACITY);
 		    } else {
 				if (window.has_focus()) {
-				this.w_box.style_class = 'window-focused';
-				this.w_box.icon.set_opacity(FOCUSED_OPACITY);
+				w_box.style_class = 'window-focused';
+				w_box.icon.set_opacity(FOCUSED_OPACITY);
 				} else {
-				this.w_box.style_class = 'window-unfocused';
-				this.w_box.icon.set_opacity(UNFOCUSED_OPACITY);
+				w_box.style_class = 'window-unfocused';
+				w_box.icon.set_opacity(UNFOCUSED_OPACITY);
 				}
 		    }
         
 		    // add button in task bar
-		   	this.w_box.set_child(this.w_box.icon);
+		   	w_box.set_child(w_box.icon);
 		   	if (window.is_on_all_workspaces()) {
-		   		this.ws_bar.insert_child_at_index(this.w_box, 0);	
+		   		this.ws_bar.insert_child_at_index(w_box, 0);	
 		   	} else {
-		    	this.ws_bar.add_child(this.w_box);
+		    	this.ws_bar.add_child(w_box);
 		    }
 		}
 	}
@@ -278,13 +278,14 @@ class WorkspacesBar extends PanelMenu.Button {
     }
     
     // show window tooltip
-    _show_tooltip(position, window_title) {
-    	this.window_tooltip.set_position(position, Main.layoutManager.primaryMonitor.y + Main.panel.height + TOOLTIP_VERTICAL_DELTA);
-		this.window_tooltip.label.set_text(window_title);
-		this.window_tooltip.show();
-		this.window_tooltip_timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, TOOLTIP_TIMEOUT, () => {
+    _show_tooltip(w_box, window_title) {
+		if (window_title && w_box.hover) {
+			this.window_tooltip.set_position(w_box.get_transformed_position()[0], Main.layoutManager.primaryMonitor.y + Main.panel.height + TOOLTIP_VERTICAL_DELTA);
+			this.window_tooltip.label.set_text(window_title);
+			this.window_tooltip.show();
+		} else {
 			this.window_tooltip.hide();
-		});
+		}
     }
 });
 
