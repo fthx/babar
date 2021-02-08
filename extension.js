@@ -25,9 +25,10 @@ var WORKSPACES_SCHEMA = "org.gnome.desktop.wm.preferences";
 var WORKSPACES_KEY = "workspace-names";
 var FAVORITES_ICON_NAME = 'starred-symbolic';
 var PLACES_ICON_NAME = 'folder-symbolic';
+var FALLBACK_ICON_NAME = 'action-unavailable-symbolic';
 var DISPLAY_APP_GRID = true;
 var ICON_SIZE = 20;
-var TOOLTIP_VERTICAL_DELTA = 10;
+var TOOLTIP_VERTICAL_PADDING = 10;
 var HIDDEN_OPACITY = 127;
 var UNFOCUSED_OPACITY = 255;
 var FOCUSED_OPACITY = 255;
@@ -123,7 +124,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		this.workspaces_names_changed = this.workspaces_settings.connect(`changed::${WORKSPACES_KEY}`, this._update_workspaces_names.bind(this));
 		
 		// fallback icon
-		this.fallback_icon = new St.Icon({icon_name: 'action-unavailable-symbolic', style_class: 'system-status-icon'});
+		this.fallback_icon = new St.Icon({icon_name: FALLBACK_ICON_NAME, style_class: 'system-status-icon'});
 		
 		// bar creation
 		this.ws_bar = new St.BoxLayout({});
@@ -161,6 +162,8 @@ class WorkspacesBar extends PanelMenu.Button {
 
 	// update the workspaces bar
     _update_ws() {
+    	var ws_box;
+    	
     	// destroy old workspaces bar buttons and signals
     	this.ws_bar.destroy_all_children();
     	
@@ -171,7 +174,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		// display all current workspaces and tasks buttons
         for (let ws_index = 0; ws_index < this.ws_count; ++ws_index) {
         	// workspace
-			var ws_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});						
+			ws_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});						
 			ws_box.label = new St.Label({y_align: Clutter.ActorAlign.CENTER});
 			if (ws_index == this.active_ws_index) {
 				ws_box.label.style_class = 'workspace-active';
@@ -281,7 +284,7 @@ class WorkspacesBar extends PanelMenu.Button {
     // show window tooltip
     _show_tooltip(w_box, window_title) {
 		if (window_title && w_box.hover) {
-			this.window_tooltip.set_position(w_box.get_transformed_position()[0], Main.layoutManager.primaryMonitor.y + Main.panel.height + TOOLTIP_VERTICAL_DELTA);
+			this.window_tooltip.set_position(w_box.get_transformed_position()[0], Main.layoutManager.primaryMonitor.y + Main.panel.height + TOOLTIP_VERTICAL_PADDING);
 			this.window_tooltip.label.set_text(window_title);
 			this.window_tooltip.show();
 		} else {
@@ -310,7 +313,7 @@ class Extension {
 	_show_places_icon(show_icon) {
 		this.places_indicator = Main.panel.statusArea['places-menu'];
 		if (this.places_indicator) {
-			this.places_box = this.places_indicator.first_child;
+			this.places_box = this.places_indicator.get_first_child();
 			this.places_box.remove_child(this.places_box.get_first_child());
 			if (show_icon) {
 				this.places_icon = new St.Icon({icon_name: PLACES_ICON_NAME, style_class: 'system-status-icon'});
