@@ -24,6 +24,7 @@ const N_ = x => x;
 var WORKSPACES_SCHEMA = "org.gnome.desktop.wm.preferences";
 var WORKSPACES_KEY = "workspace-names";
 var FAVORITES_ICON_NAME = 'starred-symbolic';
+var PLACES_ICON_NAME = 'folder-symbolic';
 var DISPLAY_APP_GRID = true;
 var ICON_SIZE = 20;
 var TOOLTIP_VERTICAL_DELTA = 10;
@@ -118,7 +119,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		this.window_tracker = Shell.WindowTracker.get_default();
 		
 		// define gsettings schema for workspaces names, get workspaces names, signal for settings key changed
-		this.workspaces_settings = new Gio.Settings({ schema: WORKSPACES_SCHEMA });
+		this.workspaces_settings = new Gio.Settings({schema: WORKSPACES_SCHEMA});
 		this.workspaces_names_changed = this.workspaces_settings.connect(`changed::${WORKSPACES_KEY}`, this._update_workspaces_names.bind(this));
 		
 		// fallback icon
@@ -305,21 +306,19 @@ class Extension {
 		}
 	}
 	
-	// toggle Places Status Indicator extension label to folder
+	// toggle Places Status Indicator extension label to folder	
 	_show_places_icon(show_icon) {
 		this.places_indicator = Main.panel.statusArea['places-menu'];
 		if (this.places_indicator) {
-			this.places_indicator.remove_child(this.places_indicator.get_first_child());
-			this.places_box = new St.BoxLayout({style_class: 'panel-status-menu-box'});
+			this.places_box = this.places_indicator.first_child;
+			this.places_box.remove_child(this.places_box.get_first_child());
 			if (show_icon) {
-				this.places_icon = new St.Icon({icon_name: 'folder-symbolic', style_class: 'system-status-icon'});
-				this.places_box.add_child(this.places_icon);
+				this.places_icon = new St.Icon({icon_name: PLACES_ICON_NAME, style_class: 'system-status-icon'});
+				this.places_box.insert_child_at_index(this.places_icon, 0);
 			} else {
-				this.places_label = new St.Label({text: _('Places'), y_expand: true,y_align: Clutter.ActorAlign.CENTER});
-				this.places_box.add_child(this.places_label);
+				this.places_label = new St.Label({text: _('Places'), y_expand: true, y_align: Clutter.ActorAlign.CENTER});
+				this.places_box.insert_child_at_index(this.places_label, 0);
 			}
-			this.places_box.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
-			this.places_indicator.add_actor(this.places_box);
 		}
 	}
 
