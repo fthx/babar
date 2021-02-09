@@ -194,7 +194,8 @@ class WorkspacesBar extends PanelMenu.Button {
 	        this.ws_current.windows = this.ws_current.list_windows().sort(this._sort_windows);
 	        for (let window_index = 0; window_index < this.ws_current.windows.length; ++window_index) {
 	        	this.window = this.ws_current.windows[window_index];
-	        	if (this.window) {
+	        	// don't make a button for dropdown menu
+	        	if (this.window && !(this.window.get_window_type() == Meta.WindowType.DROPDOWN_MENU)) {
 	        		this._create_window_button(ws_index, this.window);
 	        	}
 	        }
@@ -207,11 +208,6 @@ class WorkspacesBar extends PanelMenu.Button {
     	var w_box_app;
     	var w_box_icon;
     	
-    	// don't make a button for dropdown menu or modal dialog
-    	if ([Meta.WindowType.DROPDOWN_MENU, Meta.WindowType.MODAL_DIALOG].includes(window.window_type)) {
-        	return;
-        }
-        
         // windows on all workspaces have to be displayed only once
     	if (!window.is_on_all_workspaces() || ws_index == 0) {
 		    // create button
