@@ -1,4 +1,4 @@
-.workspace-active {
+.workspace-active-squared {
   margin-left: 16px;
   margin-right: 12px;
   background-color: rgba(204, 204, 204, 1);
@@ -7,13 +7,31 @@
   border-radius: 2px;
 }
 
-.workspace-inactive {
+.workspace-inactive-squared {
   margin-left: 16px;
   margin-right: 12px;
   background-color: rgba(127, 127, 127, 1);
   color: rgba(0, 0, 0, 1);
   border: 1px solid rgba(0, 0, 0, 0.7);
   border-radius: 2px;
+}
+
+.workspace-active-rounded {
+  margin-left: 16px;
+  margin-right: 12px;
+  background-color: rgba(204, 204, 204, 1);
+  color: rgba(0, 0, 0, 1);
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  border-radius: 10px;
+}
+
+.workspace-inactive-rounded {
+  margin-left: 16px;
+  margin-right: 12px;
+  background-color: rgba(127, 127, 127, 1);
+  color: rgba(0, 0, 0, 1);
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  border-radius: 10px;
 }
 
 .favorite {

@@ -14,29 +14,37 @@ const PopupMenu = imports.ui.popupMenu;
 const AppFavorites = imports.ui.appFavorites;
 const AppMenu = Main.panel.statusArea.appMenu;
 const WM = global.workspace_manager;
+const Util = imports.misc.util;
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
 
 // translation needed to restore Places label, if any
 const Gettext = imports.gettext.domain('gnome-shell-extensions');
 const _ = Gettext.gettext;
 const N_ = x => x;
 
-
-// settings
+// workspaces names from native schema
 var WORKSPACES_SCHEMA = "org.gnome.desktop.wm.preferences";
 var WORKSPACES_KEY = "workspace-names";
-var FAVORITES_ICON_NAME = 'starred-symbolic';
+
+// initial fallback settings
+var APP_GRID_ICON_NAME = 'view-app-grid-symbolic';
 var PLACES_ICON_NAME = 'folder-symbolic';
+var FAVORITES_ICON_NAME = 'starred-symbolic';
 var FALLBACK_ICON_NAME = 'applications-system-symbolic';
-var DISPLAY_APP_GRID = true;
 var ICON_SIZE = 20;
+var ROUNDED_WORKSPACES_BUTTONS = true;
 var TOOLTIP_VERTICAL_PADDING = 10;
 var HIDDEN_OPACITY = 127;
 var UNFOCUSED_OPACITY = 255;
 var FOCUSED_OPACITY = 255;
-var HIDE_APP_MENU = true;
-var DISPLAY_FAVORITES = true;
-var DISPLAY_TASKS = true;
+var DISPLAY_ACTIVITIES = false;
+var DISPLAY_APP_GRID = true;
 var DISPLAY_PLACES_ICON = true;
+var DISPLAY_FAVORITES = true;
+var DISPLAY_WORKSPACES = true;
+var DISPLAY_TASKS = true;
+var DISPLAY_APP_MENU = false;
 
 
 var AppGridButton = GObject.registerClass(
@@ -45,10 +53,14 @@ class AppGridButton extends PanelMenu.Button {
 		super._init(0.0, 'Babar-AppGrid');
 		
 		this.app_grid_button = new St.BoxLayout({visible: true, reactive: true, can_focus: true, track_hover: true});
-		this.app_grid_button.icon = new St.Icon({ icon_name: 'view-app-grid-symbolic', style_class: 'system-status-icon' });
+		this.app_grid_button.icon = new St.Icon({icon_name: APP_GRID_ICON_NAME, style_class: 'system-status-icon'});
         this.app_grid_button.add_child(this.app_grid_button.icon);
         this.app_grid_button.connect('button-press-event', () => Main.overview.viewSelector._toggleAppsPage());
         this.add_child(this.app_grid_button);
+	}
+	
+	_destroy() {
+		super.destroy();
 	}
 });
 
@@ -175,11 +187,21 @@ class WorkspacesBar extends PanelMenu.Button {
         	// workspace
 			ws_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});						
 			ws_box_label = new St.Label({y_align: Clutter.ActorAlign.CENTER});
-			if (ws_index == this.active_ws_index) {
-				ws_box_label.style_class = 'workspace-active';
+			
+			if (!ROUNDED_WORKSPACES_BUTTONS) {
+				if (ws_index == this.active_ws_index) {
+					ws_box_label.style_class = 'workspace-active-squared';
+				} else {
+					ws_box_label.style_class = 'workspace-inactive-squared';
+				}
 			} else {
-				ws_box_label.style_class = 'workspace-inactive';
+				if (ws_index == this.active_ws_index) {
+					ws_box_label.style_class = 'workspace-active-rounded';
+				} else {
+					ws_box_label.style_class = 'workspace-inactive-rounded';
+				}
 			}
+			
 			if (this.workspaces_names[ws_index]) {
 				ws_box_label.set_text("  " + this.workspaces_names[ws_index] + "  ");
 			} else {
@@ -187,7 +209,9 @@ class WorkspacesBar extends PanelMenu.Button {
 			}
 			ws_box.set_child(ws_box_label);
 			ws_box.connect('button-press-event', () => this._toggle_ws(ws_index));
-	        this.ws_bar.add_child(ws_box);
+			if (DISPLAY_WORKSPACES) {
+	        	this.ws_bar.add_child(ws_box);
+	        }
 	        
 	        // tasks
 	        this.ws_current = WM.get_workspace_by_index(ws_index);
@@ -292,8 +316,45 @@ class WorkspacesBar extends PanelMenu.Button {
 });
 
 class Extension {
-    constructor() {
+	constructor() {
+	}
+	
+	// get settings
+    _get_settings() {
+        this.settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.babar');
+        
+        // watch settings changes
+        this.settings_already_changed = false;
+		this.settings_changed = this.settings.connect('changed', this._settings_changed.bind(this)
+		);
+		
+		// get settings values
+		APP_GRID_ICON_NAME = this.settings.get_string('app-grid-icon-name');
+		PLACES_ICON_NAME = this.settings.get_string('places-icon-name');
+		FAVORITES_ICON_NAME = this.settings.get_string('favorites-icon-name');
+		FALLBACK_ICON_NAME = this.settings.get_string('fallback-icon-name');
+		ICON_SIZE = this.settings.get_int('icon-size');
+		ROUNDED_WORKSPACES_BUTTONS = this.settings.get_boolean('rounded-workspaces-buttons');
+		TOOLTIP_VERTICAL_PADDING = this.settings.get_int('tooltip-vertical-padding');
+		HIDDEN_OPACITY = this.settings.get_int('hidden-opacity');
+		UNFOCUSED_OPACITY = this.settings.get_int('unfocused-opacity');
+		FOCUSED_OPACITY = this.settings.get_int('focused-opacity');
+		DISPLAY_ACTIVITIES = this.settings.get_boolean('display-activities');
+		DISPLAY_APP_GRID = this.settings.get_boolean('display-app-grid');
+		DISPLAY_PLACES_ICON = this.settings.get_boolean('display-places-icon');
+		DISPLAY_FAVORITES = this.settings.get_boolean('display-favorites');
+		DISPLAY_WORKSPACES = this.settings.get_boolean('display-workspaces');
+		DISPLAY_TASKS = this.settings.get_boolean('display-tasks');
+		DISPLAY_APP_MENU = this.settings.get_boolean('display-app-menu');
     }
+    
+    // restart extension after settings changed
+    _settings_changed() {
+    	if (!this.settings_already_changed) {
+    		Main.notify("Please restart BaBar extension to apply changes.");
+    		this.settings_already_changed = true;
+    	}
+    }    
     
     // toggle Activities button
 	_show_activities(show) {
@@ -324,44 +385,47 @@ class Extension {
 	}
 
     enable() {
+    	// get settings
+    	this._get_settings();
+    
     	// hide Activities button
-    	this._show_activities(false);
+    	if (!DISPLAY_ACTIVITIES) {
+    		this._show_activities(false);
+    	}
     	
-    	// hide AppMenu
-    	if (HIDE_APP_MENU) {
-			AppMenu.container.hide();
-		}
-		
-		// if Places extension is installed, change label to icon
-		if (DISPLAY_PLACES_ICON) {
-			this._show_places_icon(true);
-			
-			// watch if extension is enabled after BaBar
-			this.extensions_changed = Main.extensionManager.connect('extension-state-changed', () => this._show_places_icon(true));
-		}
-		
-		// display app grid
+    	// display app grid
 		if (DISPLAY_APP_GRID) {
 			this.app_grid = new AppGridButton();
 			Main.panel.addToStatusArea('babar-app-grid-button', this.app_grid, 0, 'left');
 		}
 		
+		// if Places extension is installed, change label to icon
+		if (DISPLAY_PLACES_ICON) {
+			this._show_places_icon(true);
+			this.extensions_changed = Main.extensionManager.connect('extension-state-changed', () => this._show_places_icon(true));
+		}
+		
 		// display favorites
 		if (DISPLAY_FAVORITES) {
 			this.favorites_menu = new FavoritesMenu();
-			Main.panel.addToStatusArea('babar-favorites-menu', this.favorites_menu, 4, 'left');
+			Main.panel.addToStatusArea('babar-favorites-menu', this.favorites_menu, 3, 'left');
 		}
 		
 		// display tasks
 		if (DISPLAY_TASKS) {
 			this.workspaces_bar = new WorkspacesBar();
-			Main.panel.addToStatusArea('babar-workspaces-bar', this.workspaces_bar, 5, 'left');
+			Main.panel.addToStatusArea('babar-workspaces-bar', this.workspaces_bar, 4, 'left');
+		}
+		
+		// hide AppMenu
+    	if (!DISPLAY_APP_MENU) {
+			AppMenu.container.hide();
 		}
     }
 
     disable() {
     	if (this.app_grid) {
-    		this.app_grid.destroy();
+    		this.app_grid._destroy();
     	}
     	
     	if (this.favorites_menu) {
@@ -386,6 +450,8 @@ class Extension {
 			AppMenu.container.show();
 		}
 		
+		// unwatch settings
+		this.settings.disconnect(this.settings_changed);
     }
 }
 
