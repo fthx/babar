@@ -42,6 +42,10 @@
 			<default>255</default>
 		</key>
 		
+		<key name="desaturate-icons" type="b">
+			<default>false</default>
+		</key>
+		
 		<key name="display-activities" type="b">
 			<default>false</default>
 		</key>
