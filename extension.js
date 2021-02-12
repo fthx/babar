@@ -38,6 +38,7 @@ var TOOLTIP_VERTICAL_PADDING = 10;
 var HIDDEN_OPACITY = 127;
 var UNFOCUSED_OPACITY = 255;
 var FOCUSED_OPACITY = 255;
+var DESATURATE_ICONS = false;
 var DISPLAY_ACTIVITIES = false;
 var DISPLAY_APP_GRID = true;
 var DISPLAY_PLACES_ICON = true;
@@ -140,6 +141,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		this.ws_bar = new St.BoxLayout({});
         this._update_workspaces_names();
         this.add_child(this.ws_bar);
+        this.desaturate = new Clutter.DesaturateEffect();
         
         // window button tooltip creation
         this.window_tooltip = new St.BoxLayout({style_class: 'window-tooltip'});
@@ -160,6 +162,9 @@ class WorkspacesBar extends PanelMenu.Button {
 		WM.disconnect(this._ws_number_changed);
 		global.display.disconnect(this._restacked);
 		global.display.disconnect(this._window_left_monitor);
+		if (this.hide_tooltip_timeout) {
+			GLib.source_remove(this.hide_tooltip_timeout);
+		}
 		this.ws_bar.destroy();
 		super.destroy();
 	}
@@ -248,6 +253,11 @@ class WorkspacesBar extends PanelMenu.Button {
 		    if (!w_box_icon || w_box_icon.get_style_class_name() == 'fallback-app-icon') {
 		    	w_box_icon = new St.Icon({icon_name: FALLBACK_ICON_NAME, style_class: 'system-status-icon'});
 			}
+			
+			// desaturate option
+			if (DESATURATE_ICONS) {
+				w_box_icon.add_effect(this.desaturate);
+			}
 		    
 			// set icon style and opacity following window state
 		    if (window.is_hidden()) {
@@ -309,6 +319,7 @@ class WorkspacesBar extends PanelMenu.Button {
 			this.window_tooltip.set_position(w_box.get_transformed_position()[0], Main.layoutManager.primaryMonitor.y + Main.panel.height + TOOLTIP_VERTICAL_PADDING);
 			this.window_tooltip.label.set_text(window_title);
 			this.window_tooltip.show();
+			this.hide_tooltip_timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => this.window_tooltip.hide())
 		} else {
 			this.window_tooltip.hide();
 		}
@@ -339,6 +350,7 @@ class Extension {
 		HIDDEN_OPACITY = this.settings.get_int('hidden-opacity');
 		UNFOCUSED_OPACITY = this.settings.get_int('unfocused-opacity');
 		FOCUSED_OPACITY = this.settings.get_int('focused-opacity');
+		DESATURATE_ICONS = this.settings.get_boolean('desaturate-icons');
 		DISPLAY_ACTIVITIES = this.settings.get_boolean('display-activities');
 		DISPLAY_APP_GRID = this.settings.get_boolean('display-app-grid');
 		DISPLAY_PLACES_ICON = this.settings.get_boolean('display-places-icon');
