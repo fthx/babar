@@ -141,7 +141,6 @@ class WorkspacesBar extends PanelMenu.Button {
 		this.ws_bar = new St.BoxLayout({});
         this._update_workspaces_names();
         this.add_child(this.ws_bar);
-        this.desaturate = new Clutter.DesaturateEffect();
         
         // window button tooltip creation
         this.window_tooltip = new St.BoxLayout({style_class: 'window-tooltip'});
@@ -256,6 +255,7 @@ class WorkspacesBar extends PanelMenu.Button {
 			
 			// desaturate option
 			if (DESATURATE_ICONS) {
+				this.desaturate = new Clutter.DesaturateEffect();
 				w_box_icon.add_effect(this.desaturate);
 			}
 		    

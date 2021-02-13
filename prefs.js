@@ -103,12 +103,12 @@ function buildPrefsWidget() {
 	// items
     make_section_title('Elements (default value)');
 
-	make_item('Display Activities (false)', 'display-activities', 'b');
-    make_item('Display applications grid (true)', 'display-app-grid', 'b');
-    make_item('Display favorites menu (true)', 'display-favorites', 'b');
-    make_item('Display workspaces (true)', 'display-workspaces', 'b');
-    make_item('Display tasks (true)', 'display-tasks', 'b');
-    make_item('Display application menu (false)', 'display-app-menu', 'b');
+	make_item('Activities (false)', 'display-activities', 'b');
+    make_item('Applications grid (true)', 'display-app-grid', 'b');
+    make_item('Favorites menu (true)', 'display-favorites', 'b');
+    make_item('Workspaces (true)', 'display-workspaces', 'b');
+    make_item('Tasks (true)', 'display-tasks', 'b');
+    make_item('Application menu (false)', 'display-app-menu', 'b');
     
     make_section_title('');
     make_section_title('Appearance (default value)');
