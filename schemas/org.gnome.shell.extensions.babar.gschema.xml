@@ -2,6 +2,10 @@
 <schemalist>
 	<schema id="org.gnome.shell.extensions.babar" path="/org/gnome/shell/extensions/babar/">
 	
+		<key name="reduce-padding" type="b">
+			<default>false</default>
+		</key>
+	
 		<key name="app-grid-icon-name" type="s">
 			<default>'view-app-grid-symbolic'</default>
 		</key>
