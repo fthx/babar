@@ -28,6 +28,7 @@ var WORKSPACES_SCHEMA = "org.gnome.desktop.wm.preferences";
 var WORKSPACES_KEY = "workspace-names";
 
 // initial fallback settings
+var REDUCE_PADDING = false;
 var APP_GRID_ICON_NAME = 'view-app-grid-symbolic';
 var PLACES_ICON_NAME = 'folder-symbolic';
 var FAVORITES_ICON_NAME = 'starred-symbolic';
@@ -75,7 +76,7 @@ class FavoritesMenu extends PanelMenu.Button {
 		this.fav_changed = AppFavorites.getAppFavorites().connect('changed', this._display_favorites.bind(this));
 		
 		// make menu button
-    	this.button = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
+    	this.button = new St.BoxLayout({});
 		this.icon = new St.Icon({icon_name: FAVORITES_ICON_NAME, style_class: 'system-status-icon'});
         this.button.add_child(this.icon);
         this.button.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
@@ -340,6 +341,7 @@ class Extension {
 		);
 		
 		// get settings values
+		REDUCE_PADDING = this.settings.get_boolean('reduce-padding');
 		APP_GRID_ICON_NAME = this.settings.get_string('app-grid-icon-name');
 		PLACES_ICON_NAME = this.settings.get_string('places-icon-name');
 		FAVORITES_ICON_NAME = this.settings.get_string('favorites-icon-name');
@@ -396,9 +398,14 @@ class Extension {
 		}
 	}
 
-    enable() {
+    enable() {    
     	// get settings
     	this._get_settings();
+    	
+    	// reduce top panel left box padding
+    	if (REDUCE_PADDING) {
+    		Main.panel._leftBox.add_style_class_name('leftbox-reduced-padding');
+    	}
     
     	// hide Activities button
     	if (!DISPLAY_ACTIVITIES) {
@@ -448,7 +455,12 @@ class Extension {
     		this.workspaces_bar._destroy();
     	}
     	
-    	// if any, restore Places label and unwatch extensions changes
+    	// restore top panel left box padding
+    	if (REDUCE_PADDING) {
+    		Main.panel._leftBox.remove_style_class_name('leftbox-reduced-padding');
+    	}
+    	
+    	// restore Places label and unwatch extensions changes
     	if (this.places_indicator && DISPLAY_PLACES_ICON) {
     		this._show_places_icon(false);
     		Main.extensionManager.disconnect(this.extensions_changed);

@@ -113,6 +113,7 @@ function buildPrefsWidget() {
     make_section_title('');
     make_section_title('Appearance (default value)');
     
+    make_item('Reduce elements padding (false)', 'reduce-padding', 'b');
     make_item('Places extension label to icon (true)', 'display-places-icon', 'b');
     make_item('Rounded workspaces icons (false)', 'rounded-workspaces-buttons', 'b');
     make_item('Remove color from tasks icons (false)', 'desaturate-icons', 'b');

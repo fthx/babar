@@ -1,3 +1,8 @@
+.leftbox-reduced-padding .panel-button {
+  -natural-hpadding: 0px;
+  -minimum-hpadding: 0px;
+}
+
 .workspace-active-squared {
   margin-left: 16px;
   margin-right: 12px;
