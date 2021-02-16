@@ -121,7 +121,9 @@ class FavoritesMenu extends PanelMenu.Button {
     
     // remove signals, destroy workspaces bar
 	_destroy() {
-		AppFavorites.getAppFavorites().disconnect(this.fav_changed);
+		if (this.fav_changed) {
+			AppFavorites.getAppFavorites().disconnect(this.fav_changed);
+		}
 		super.destroy();
 	}
 });
@@ -158,10 +160,18 @@ class WorkspacesBar extends PanelMenu.Button {
 
 	// remove signals, restore Activities button, destroy workspaces bar
 	_destroy() {
-		this.workspaces_settings.disconnect(this.workspaces_names_changed);
-		WM.disconnect(this._ws_number_changed);
-		global.display.disconnect(this._restacked);
-		global.display.disconnect(this._window_left_monitor);
+		if (this.workspaces_names_changed) {
+			this.workspaces_settings.disconnect(this.workspaces_names_changed);
+		}
+		if (this._ws_number_changed) {
+			WM.disconnect(this._ws_number_changed);
+		}
+		if (this._restacked) {
+			global.display.disconnect(this._restacked);
+		}
+		if (this._window_left_monitor) {
+			global.display.disconnect(this._window_left_monitor);
+		}
 		if (this.hide_tooltip_timeout) {
 			GLib.source_remove(this.hide_tooltip_timeout);
 		}
@@ -443,15 +453,15 @@ class Extension {
     }
 
     disable() {
-    	if (this.app_grid) {
+    	if (DISPLAY_APP_GRID && this.app_grid) {
     		this.app_grid._destroy();
     	}
     	
-    	if (this.favorites_menu) {
+    	if (DISPLAY_FAVORITES && this.favorites_menu) {
     		this.favorites_menu._destroy();
     	}
     	
-    	if (this.workspaces_bar) {
+    	if (DISPLAY_TASKS && this.workspaces_bar) {
     		this.workspaces_bar._destroy();
     	}
     	
@@ -461,7 +471,7 @@ class Extension {
     	}
     	
     	// restore Places label and unwatch extensions changes
-    	if (this.places_indicator && DISPLAY_PLACES_ICON) {
+    	if (DISPLAY_PLACES_ICON && this.places_indicator) {
     		this._show_places_icon(false);
     		Main.extensionManager.disconnect(this.extensions_changed);
     	}
