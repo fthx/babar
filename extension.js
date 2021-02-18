@@ -263,7 +263,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		    }
 		    // sometimes no icon is defined or icon is void
 		    if (!w_box_icon || w_box_icon.get_style_class_name() == 'fallback-app-icon') {
-		    	w_box_icon = new St.Icon({icon_name: FALLBACK_ICON_NAME, style_class: 'system-status-icon'});
+		    	w_box_icon = new St.Icon({icon_name: FALLBACK_ICON_NAME, icon_size: ICON_SIZE});
 			}
 			
 			// desaturate option
