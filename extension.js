@@ -140,6 +140,9 @@ class WorkspacesBar extends PanelMenu.Button {
 		this.workspaces_settings = new Gio.Settings({schema: WORKSPACES_SCHEMA});
 		this.workspaces_names_changed = this.workspaces_settings.connect(`changed::${WORKSPACES_KEY}`, this._update_workspaces_names.bind(this));
 		
+		// define windows that do not need to be have an icon
+		this.window_type_blacklist = [Meta.WindowType.DROPDOWN_MENU, Meta.WindowType.DESKTOP];
+		
 		// bar creation
 		this.ws_bar = new St.BoxLayout({});
         this._update_workspaces_names();
@@ -233,8 +236,7 @@ class WorkspacesBar extends PanelMenu.Button {
 	        this.ws_current.windows = this.ws_current.list_windows().sort(this._sort_windows);
 	        for (let window_index = 0; window_index < this.ws_current.windows.length; ++window_index) {
 	        	this.window = this.ws_current.windows[window_index];
-	        	// don't make a button for dropdown menu
-	        	if (this.window && !(this.window.get_window_type() == Meta.WindowType.DROPDOWN_MENU)) {
+	        	if (this.window && !(this.window_type_blacklist.includes(this.window.get_window_type()))) {
 	        		this._create_window_button(ws_index, this.window);
 	        	}
 	        }
