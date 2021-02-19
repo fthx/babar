@@ -1,6 +1,6 @@
 .leftbox-reduced-padding .panel-button {
-  -natural-hpadding: 0px;
-  -minimum-hpadding: 0px;
+  -natural-hpadding: 2px;
+  -minimum-hpadding: 2px;
 }
 
 .workspace-active-squared {
@@ -48,7 +48,7 @@
 
 .window-focused {
   margin-left: 0px;
-  margin-right: 6px;
+  margin-right: 8px;
   border-radius: 0px;
   padding: 0px;
   border-top: 2px solid rgba(204, 204, 204, 1);
@@ -59,7 +59,7 @@
 
 .window-unfocused {
   margin-left: 0px;
-  margin-right: 6px;
+  margin-right: 8px;
   border-radius: 0px;
   padding: 0px;
   border-top: 2px solid rgba(255, 255, 255, 0);
@@ -70,7 +70,7 @@
 
 .window-hidden {
   margin-left: 0px;
-  margin-right: 6px;
+  margin-right: 8px;
   border-radius: 0px;
   padding: 0px;
   border-top: 2px solid rgba(255, 255, 255, 0);

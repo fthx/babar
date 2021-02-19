@@ -106,14 +106,16 @@ function buildPrefsWidget() {
 	make_item('Activities (false)', 'display-activities', 'b');
     make_item('Applications grid (true)', 'display-app-grid', 'b');
     make_item('Favorites menu (true)', 'display-favorites', 'b');
+    make_item('Change workspace (true)', 'display-window-control', 'b');
     make_item('Workspaces (true)', 'display-workspaces', 'b');
     make_item('Tasks (true)', 'display-tasks', 'b');
     make_item('Application menu (false)', 'display-app-menu', 'b');
+    make_item('Dash in overview (true)', 'display-dash', 'b');
+    make_item('Workspaces thumbnails in overview (true)', 'display-workspaces-thumbnails', 'b');
     
-    make_section_title('');
     make_section_title('Appearance (default value)');
     
-    make_item('Reduce elements padding (false)', 'reduce-padding', 'b');
+    make_item('Reduce elements padding (true)', 'reduce-padding', 'b');
     make_item('Places extension label to icon (true)', 'display-places-icon', 'b');
     make_item('Rounded workspaces icons (false)', 'rounded-workspaces-buttons', 'b');
     make_item('Remove color from tasks icons (false)', 'desaturate-icons', 'b');
