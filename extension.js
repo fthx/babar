@@ -154,7 +154,7 @@ class WindowControlButton extends PanelMenu.Button {
         this.add_child(this.window_control_button);
 	}
 	
-	// move focused window to next workspace
+	// move focused window to next workspace (beware of possibly fixed number of ws)
 	_move_to_next_workspace() {
 		this.ws_count = WM.get_n_workspaces();
         this.active_ws_index = WM.get_active_workspace_index();
@@ -381,11 +381,15 @@ class WorkspacesBar extends PanelMenu.Button {
     
     // show window tooltip
     _show_tooltip(w_box, window_title) {
-		if (window_title && w_box.hover) {
+		if (window_title && w_box.get_hover()) {
 			this.window_tooltip.set_position(w_box.get_transformed_position()[0], Main.layoutManager.primaryMonitor.y + Main.panel.height + TOOLTIP_VERTICAL_PADDING);
 			this.window_tooltip.label.set_text(window_title);
 			this.window_tooltip.show();
-			this.hide_tooltip_timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => this.window_tooltip.hide())
+			this.hide_tooltip_timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 2, () => {
+				if (!Main.panel.statusArea['babar-workspaces-bar'].get_hover()) {
+					this.window_tooltip.hide()
+				}
+			})
 		} else {
 			this.window_tooltip.hide();
 		}
