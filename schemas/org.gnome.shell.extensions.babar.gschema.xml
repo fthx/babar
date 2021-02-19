@@ -66,6 +66,10 @@
 			<default>true</default>
 		</key>
 		
+		<key name="display-window-control" type="b">
+			<default>true</default>
+		</key>
+		
 		<key name="display-workspaces" type="b">
 			<default>true</default>
 		</key>
@@ -76,6 +80,14 @@
 		
 		<key name="display-app-menu" type="b">
 			<default>false</default>
+		</key>
+		
+		<key name="display-dash" type="b">
+			<default>true</default>
+		</key>
+		
+		<key name="display-workspaces-thumbnails" type="b">
+			<default>true</default>
 		</key>
 
 	</schema>
