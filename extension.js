@@ -154,24 +154,11 @@ class WindowControlButton extends PanelMenu.Button {
         this.add_child(this.window_control_button);
 	}
 	
-	// get focused window of workspace ws
-	_get_focused_window(ws) {
-		this.focused_window = null;
-		this.windows = ws.list_windows();
-		for (let w_index = 0; w_index < this.windows.length; ++w_index) {
-			this.window = this.windows[w_index];
-			if (this.window.has_focus()) {
-				this.focused_window = this.window;
-			}
-		}
-	}
-	
 	// move focused window to next workspace
 	_move_to_next_workspace() {
 		this.ws_count = WM.get_n_workspaces();
-        this.active_ws = WM.get_active_workspace();
-        this.active_ws_index = this.active_ws.index();
-        this._get_focused_window(this.active_ws);
+        this.active_ws_index = WM.get_active_workspace_index();
+        this.focused_window = global.display.get_focus_window();
         if (this.focused_window && this.active_ws_index < this.ws_count - 1) {
         	this.focused_window.change_workspace_by_index(this.active_ws_index + 1, false);
         	this.focused_window.activate(global.get_current_time());
@@ -181,9 +168,8 @@ class WindowControlButton extends PanelMenu.Button {
     // move focused window to previous workspace
 	_move_to_previous_workspace() {
 		this.ws_count = WM.get_n_workspaces();
-        this.active_ws = WM.get_active_workspace();
-        this.active_ws_index = this.active_ws.index();
-        this._get_focused_window(this.active_ws);
+        this.active_ws_index = WM.get_active_workspace_index();
+        this.focused_window = global.display.get_focus_window();
         if (this.focused_window && this.active_ws_index > 0) {
         	this.focused_window.change_workspace_by_index(this.active_ws_index - 1, false);
         	this.focused_window.activate(global.get_current_time());
