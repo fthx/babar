@@ -67,7 +67,7 @@
 		</key>
 		
 		<key name="display-window-control" type="b">
-			<default>true</default>
+			<default>false</default>
 		</key>
 		
 		<key name="display-workspaces" type="b">
@@ -87,6 +87,14 @@
 		</key>
 		
 		<key name="display-workspaces-thumbnails" type="b">
+			<default>true</default>
+		</key>
+		
+		<key name="right-click" type="b">
+			<default>true</default>
+		</key>
+		
+		<key name="middle-click" type="b">
 			<default>true</default>
 		</key>
 
