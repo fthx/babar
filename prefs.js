@@ -95,7 +95,7 @@ function buildPrefsWidget() {
     this.prefsWidget = new Gtk.Grid({
         margin: 18,
         column_spacing: 96,
-        row_spacing: 16,
+        row_spacing: 8,
         visible: true
     });
     this.row = 0;
@@ -106,7 +106,7 @@ function buildPrefsWidget() {
 	make_item('Activities (false)', 'display-activities', 'b');
     make_item('Applications grid (true)', 'display-app-grid', 'b');
     make_item('Favorites menu (true)', 'display-favorites', 'b');
-    make_item('Change workspace (true)', 'display-window-control', 'b');
+    make_item('Move focused window to previous/next workspace (false)', 'display-window-control', 'b');
     make_item('Workspaces (true)', 'display-workspaces', 'b');
     make_item('Tasks (true)', 'display-tasks', 'b');
     make_item('Application menu (false)', 'display-app-menu', 'b');
@@ -123,6 +123,11 @@ function buildPrefsWidget() {
     make_item('Applications grid icon (view-app-grid-symbolic)', 'app-grid-icon-name', 's');
     make_item('Places icon (folder-symbolic)', 'places-icon-name', 's');
     make_item('Favorites icon (starred-symbolic)', 'favorites-icon-name', 's');
+    
+    make_section_title('Behaviour (default value)');
+    
+    make_item('Right-click to show move-to-workspace arrows (true)', 'right-click', 'b');
+    make_item('Middle-click to close window (true)', 'middle-click', 'b');
 	
     // return widget
     return this.prefsWidget;

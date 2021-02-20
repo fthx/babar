@@ -46,11 +46,14 @@
   spacing: 16px;
 }
 
-.window-focused {
+.window-box {
   margin-left: 0px;
   margin-right: 8px;
   border-radius: 0px;
   padding: 0px;
+}
+
+.window-focused {
   border-top: 2px solid rgba(204, 204, 204, 1);
   border-right: 0px hidden;
   border-bottom: 2px hidden;
@@ -58,10 +61,6 @@
 }
 
 .window-unfocused {
-  margin-left: 0px;
-  margin-right: 8px;
-  border-radius: 0px;
-  padding: 0px;
   border-top: 2px solid rgba(255, 255, 255, 0);
   border-right: 0px hidden;
   border-bottom: 2px hidden;
@@ -69,10 +68,6 @@
 }
 
 .window-hidden {
-  margin-left: 0px;
-  margin-right: 8px;
-  border-radius: 0px;
-  padding: 0px;
   border-top: 2px solid rgba(255, 255, 255, 0);
   border-right: 0px hidden;
   border-bottom: 2px hidden;

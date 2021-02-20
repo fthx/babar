@@ -28,6 +28,8 @@ var WORKSPACES_SCHEMA = "org.gnome.desktop.wm.preferences";
 var WORKSPACES_KEY = "workspace-names";
 
 // initial fallback settings
+var RIGHT_CLICK = true;
+var MIDDLE_CLICK = true;
 var REDUCE_PADDING = true;
 var APP_GRID_ICON_NAME = 'view-app-grid-symbolic';
 var PLACES_ICON_NAME = 'folder-symbolic';
@@ -46,7 +48,7 @@ var DISPLAY_ACTIVITIES = false;
 var DISPLAY_APP_GRID = true;
 var DISPLAY_PLACES_ICON = true;
 var DISPLAY_FAVORITES = true;
-var DISPLAY_WINDOW_CONTROL = true;
+var DISPLAY_WINDOW_CONTROL = false;
 var DISPLAY_WORKSPACES = true;
 var DISPLAY_TASKS = true;
 var DISPLAY_APP_MENU = false;
@@ -243,9 +245,6 @@ class WorkspacesBar extends PanelMenu.Button {
 
 	// update the workspaces bar
     _update_ws() {
-    	var ws_box;
-    	var ws_box_label;
-    	
     	// destroy old workspaces bar buttons and signals
     	this.ws_bar.destroy_all_children();
     	
@@ -256,8 +255,8 @@ class WorkspacesBar extends PanelMenu.Button {
 		// display all current workspaces and tasks buttons
         for (let ws_index = 0; ws_index < this.ws_count; ++ws_index) {
         	// workspace
-			ws_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});						
-			ws_box_label = new St.Label({y_align: Clutter.ActorAlign.CENTER});
+			var ws_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});						
+			var ws_box_label = new St.Label({y_align: Clutter.ActorAlign.CENTER});
 			
 			if (!ROUNDED_WORKSPACES_BUTTONS) {
 				if (ws_index == this.active_ws_index) {
@@ -297,27 +296,41 @@ class WorkspacesBar extends PanelMenu.Button {
     }
     
     // create window button ; ws = workspace, w = window
-    _create_window_button(ws_index, window) {
-    	var w_box;
-    	var w_box_app;
-    	var w_box_icon;
+    _create_window_button(ws_index, w) {    	
+    	// move to previous/next workspace buttons (will be shown on w button hover)
+    	var move_previous = new St.Bin({visible: false, reactive: true, can_focus: true, track_hover: true});
+    	var move_previous_icon = new St.Icon({icon_name: MOVE_TO_PREVIOUS_WORKSPACE_ICON_NAME, style_class: 'system-status-icon'});
+    	move_previous.set_child(move_previous_icon);
+    	
+    	var move_next = new St.Bin({visible: false, reactive: true, can_focus: true, track_hover: true});
+    	var move_next_icon = new St.Icon({icon_name: MOVE_TO_NEXT_WORKSPACE_ICON_NAME, style_class: 'system-status-icon'});
+    	move_next.set_child(move_next_icon);
+    	
+    	move_previous.connect('button-press-event', () => this._move_to_previous_workspace(ws_index, w));
+    	move_next.connect('button-press-event', () => this._move_to_next_workspace(ws_index, w));
     	
         // windows on all workspaces have to be displayed only once
-    	if (!window.is_on_all_workspaces() || ws_index == 0) {
+    	if (!w.is_on_all_workspaces() || ws_index == 0) {
 		    // create button
-			w_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
-			w_box.connect('button-press-event', () => this._toggle_window(ws_index, window));
-			w_box.connect('notify::hover', () => this._show_tooltip(w_box, window.title));
-		    w_box_app = this.window_tracker.get_window_app(window);
+			var w_box = new St.BoxLayout({visible: true, reactive: true, can_focus: true, track_hover: true, style_class: 'window-box'});
+		    var w_box_app = this.window_tracker.get_window_app(w);
 		    
-		    // create icon
+		    // arrows state
+		    w_box.arrows = false;
+		    
+		    // create w button and its icon
+		    var w_box_button = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
+		    var w_box_icon;
 		    if (w_box_app) {
 		    	w_box_icon = w_box_app.create_icon_texture(ICON_SIZE);
 		    }
-		    // sometimes no icon is defined or icon is void
+		    // sometimes no icon is defined or icon is void, at least for a short time
 		    if (!w_box_icon || w_box_icon.get_style_class_name() == 'fallback-app-icon') {
 		    	w_box_icon = new St.Icon({icon_name: FALLBACK_ICON_NAME, icon_size: ICON_SIZE});
 			}
+			w_box_button.set_child(w_box_icon);
+			w_box_button.connect('button-press-event', (widget, event) => this._on_button_press(widget, event, w_box, ws_index, w));
+			w_box.connect('notify::hover', () => this._on_button_hover(w_box, w.title));
 			
 			// desaturate option
 			if (DESATURATE_ICONS) {
@@ -326,22 +339,24 @@ class WorkspacesBar extends PanelMenu.Button {
 			}
 		    
 			// set icon style and opacity following window state
-		    if (window.is_hidden()) {
-				w_box.style_class = 'window-hidden';
+		    if (w.is_hidden()) {
+				w_box_button.style_class = 'window-hidden';
 				w_box_icon.set_opacity(HIDDEN_OPACITY);
 		    } else {
-				if (window.has_focus()) {
-				w_box.style_class = 'window-focused';
+				if (w.has_focus()) {
+				w_box_button.style_class = 'window-focused';
 				w_box_icon.set_opacity(FOCUSED_OPACITY);
 				} else {
-				w_box.style_class = 'window-unfocused';
+				w_box_button.style_class = 'window-unfocused';
 				w_box_icon.set_opacity(UNFOCUSED_OPACITY);
 				}
 		    }
         
 		    // add button in task bar
-		   	w_box.set_child(w_box_icon);
-		   	if (window.is_on_all_workspaces()) {
+		    w_box.add_child(w_box_button);
+		    w_box.add_child(move_previous);
+		   	w_box.add_child(move_next);
+		   	if (w.is_on_all_workspaces()) {
 		   		this.ws_bar.insert_child_at_index(w_box, 0);	
 		   	} else {
 		    	this.ws_bar.add_child(w_box);
@@ -349,19 +364,71 @@ class WorkspacesBar extends PanelMenu.Button {
 		}
 	}
 	
-	// switch to workspace and toggle window
-    _toggle_window(ws_index, window) {
-	    if (WM.get_active_workspace_index() == ws_index && window.has_focus() && !(Main.overview.visible)) {
-	   		window.minimize();
-	   	} else {	
-			window.activate(global.get_current_time());
+	// move window w from workspace ws to previous workspace
+	_move_to_previous_workspace(ws_index, w) {
+		if (ws_index > 0) {
+        	w.change_workspace_by_index(ws_index - 1, false);
+        	if (w.has_focus()) {
+        		w.activate(global.get_current_time());
+        	}
+        }
+    }
+    
+    // move window w from workspace ws to next workspace
+	_move_to_next_workspace(ws_index, w) {
+		if (ws_index < this.ws_count - 1) {
+        	w.change_workspace_by_index(ws_index + 1, false);
+        	if (w.has_focus()) {
+        		w.activate(global.get_current_time());
+        	}
+        }
+    }
+	
+	// on w button press
+    _on_button_press(widget, event, w_box, ws_index, window) {
+    	// left-click: toggle window
+    	if (event.get_button() == 1) {
+			if (WM.get_active_workspace_index() == ws_index && window.has_focus() && !(Main.overview.visible)) {
+		   		window.minimize();
+		   	} else {	
+				window.activate(global.get_current_time());
+			}
+			if (Main.overview.visible) {
+				Main.overview.hide();
+			}
+			if (!(window.is_on_all_workspaces())) {
+				WM.get_workspace_by_index(ws_index).activate(global.get_current_time());
+			}
 		}
-		if (Main.overview.visible) {
-			Main.overview.hide();
+		
+		// right-click: toggle arrows
+		if (RIGHT_CLICK && event.get_button() == 3) {
+			if (!w_box.arrows) {
+				if (w_box.get_child_at_index(1)) {
+					w_box.get_child_at_index(1).show();
+				}
+				if (w_box.get_child_at_index(2)) {
+					w_box.get_child_at_index(2).show();
+				}
+				w_box.arrows = true;
+			} else {
+				if (w_box.get_child_at_index(1)) {
+					w_box.get_child_at_index(1).hide();
+				}
+				if (w_box.get_child_at_index(2)) {
+					w_box.get_child_at_index(2).hide();
+				}
+				w_box.arrows = false;
+			}
 		}
-		if (!(window.is_on_all_workspaces())) {
-			WM.get_workspace_by_index(ws_index).activate(global.get_current_time());
+		
+		// middle-click: close window
+		if (MIDDLE_CLICK && event.get_button() == 2) {
+			if (window.can_close()) {
+				window.delete(global.get_current_time());
+			}
 		}
+		
     }
     
     // sort windows by creation date
@@ -379,9 +446,9 @@ class WorkspacesBar extends PanelMenu.Button {
 		}
     }
     
-    // show window tooltip
-    _show_tooltip(w_box, window_title) {
-		if (window_title && w_box.get_hover()) {
+    // on w button hover: toggle tooltip
+    _on_button_hover(w_box, window_title) {
+		if (window_title && w_box && w_box.get_hover()) {
 			this.window_tooltip.set_position(w_box.get_transformed_position()[0], Main.layoutManager.primaryMonitor.y + Main.panel.height + TOOLTIP_VERTICAL_PADDING);
 			this.window_tooltip.label.set_text(window_title);
 			this.window_tooltip.show();
@@ -389,7 +456,7 @@ class WorkspacesBar extends PanelMenu.Button {
 				if (!Main.panel.statusArea['babar-workspaces-bar'].get_hover()) {
 					this.window_tooltip.hide()
 				}
-			})
+			});
 		} else {
 			this.window_tooltip.hide();
 		}
@@ -407,6 +474,8 @@ class Extension {
         this.settings_already_changed = false;
 		this.settings_changed = this.settings.connect('changed', this._settings_changed.bind(this));
 		
+		RIGHT_CLICK = this.settings.get_boolean('right-click');
+		MIDDLE_CLICK = this.settings.get_boolean('middle-click');
 		REDUCE_PADDING = this.settings.get_boolean('reduce-padding');
 		APP_GRID_ICON_NAME = this.settings.get_string('app-grid-icon-name');
 		PLACES_ICON_NAME = this.settings.get_string('places-icon-name');
