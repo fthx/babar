@@ -372,6 +372,7 @@ class WorkspacesBar extends PanelMenu.Button {
         		w.activate(global.get_current_time());
         	}
         }
+        this.window_tooltip.hide();
     }
     
     // move window w from workspace ws to next workspace
@@ -382,6 +383,7 @@ class WorkspacesBar extends PanelMenu.Button {
         		w.activate(global.get_current_time());
         	}
         }
+        this.window_tooltip.hide();
     }
 	
 	// on w button press
@@ -427,6 +429,7 @@ class WorkspacesBar extends PanelMenu.Button {
 			if (window.can_close()) {
 				window.delete(global.get_current_time());
 			}
+			this.window_tooltip.hide();
 		}
 		
     }
