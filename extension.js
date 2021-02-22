@@ -306,8 +306,10 @@ class WorkspacesBar extends PanelMenu.Button {
     	var move_next_icon = new St.Icon({icon_name: MOVE_TO_NEXT_WORKSPACE_ICON_NAME, style_class: 'system-status-icon'});
     	move_next.set_child(move_next_icon);
     	
-    	move_previous.connect('button-press-event', () => this._move_to_previous_workspace(ws_index, w));
-    	move_next.connect('button-press-event', () => this._move_to_next_workspace(ws_index, w));
+    	if (!w.is_on_all_workspaces()) {
+			move_previous.connect('button-press-event', () => this._move_to_previous_workspace(ws_index, w));
+			move_next.connect('button-press-event', () => this._move_to_next_workspace(ws_index, w));
+		}
     	
         // windows on all workspaces have to be displayed only once
     	if (!w.is_on_all_workspaces() || ws_index == 0) {
@@ -386,25 +388,25 @@ class WorkspacesBar extends PanelMenu.Button {
         this.window_tooltip.hide();
     }
 	
-	// on w button press
-    _on_button_press(widget, event, w_box, ws_index, window) {
+	// on window w button press
+    _on_button_press(widget, event, w_box, ws_index, w) {
     	// left-click: toggle window
     	if (event.get_button() == 1) {
-			if (WM.get_active_workspace_index() == ws_index && window.has_focus() && !(Main.overview.visible)) {
-		   		window.minimize();
+			if (w.has_focus() && w.can_minimize() && !Main.overview.visible) {//WM.get_active_workspace_index() == ws_index && 
+		   		w.minimize();
 		   	} else {	
-				window.activate(global.get_current_time());
+				w.activate(global.get_current_time());
 			}
 			if (Main.overview.visible) {
 				Main.overview.hide();
 			}
-			if (!(window.is_on_all_workspaces())) {
+			if (!w.is_on_all_workspaces()) {
 				WM.get_workspace_by_index(ws_index).activate(global.get_current_time());
 			}
 		}
 		
 		// right-click: toggle arrows
-		if (RIGHT_CLICK && event.get_button() == 3) {
+		if (RIGHT_CLICK && event.get_button() == 3 && !w.is_on_all_workspaces()) {
 			if (!w_box.arrows) {
 				if (w_box.get_child_at_index(1)) {
 					w_box.get_child_at_index(1).show();
@@ -425,18 +427,16 @@ class WorkspacesBar extends PanelMenu.Button {
 		}
 		
 		// middle-click: close window
-		if (MIDDLE_CLICK && event.get_button() == 2) {
-			if (window.can_close()) {
-				window.delete(global.get_current_time());
-			}
+		if (MIDDLE_CLICK && event.get_button() == 2 && w.can_close()) {
+			w.delete(global.get_current_time());
 			this.window_tooltip.hide();
 		}
 		
     }
     
     // sort windows by creation date
-    _sort_windows(window1, window2) {
-    	return window1.get_id() - window2.get_id();
+    _sort_windows(w1, w2) {
+    	return w1.get_id() - w2.get_id();
     }
 
     // toggle or show overview
