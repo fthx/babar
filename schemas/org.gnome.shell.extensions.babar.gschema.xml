@@ -3,7 +3,7 @@
 	<schema id="org.gnome.shell.extensions.babar" path="/org/gnome/shell/extensions/babar/">
 	
 		<key name="reduce-padding" type="b">
-			<default>false</default>
+			<default>true</default>
 		</key>
 	
 		<key name="app-grid-icon-name" type="s">
