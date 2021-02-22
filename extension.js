@@ -392,8 +392,10 @@ class WorkspacesBar extends PanelMenu.Button {
     _on_button_press(widget, event, w_box, ws_index, w) {
     	// left-click: toggle window
     	if (event.get_button() == 1) {
-			if (w.has_focus() && w.can_minimize() && !Main.overview.visible) {//WM.get_active_workspace_index() == ws_index && 
-		   		w.minimize();
+			if (w.has_focus() && !Main.overview.visible) {
+				if (w.can_minimize()) {
+		   			w.minimize();
+		   		}
 		   	} else {	
 				w.activate(global.get_current_time());
 			}
