@@ -195,8 +195,8 @@ class WorkspacesBar extends PanelMenu.Button {
 		this.workspaces_settings = new Gio.Settings({schema: WORKSPACES_SCHEMA});
 		this.workspaces_names_changed = this.workspaces_settings.connect(`changed::${WORKSPACES_KEY}`, this._update_workspaces_names.bind(this));
 		
-		// define windows that do not need to have an icon
-		this.window_type_blacklist = [Meta.WindowType.DROPDOWN_MENU, Meta.WindowType.DESKTOP];
+		// define windows that need an icon (see https://www.roojs.org/seed/gir-1.2-gtk-3.0/seed/Meta.WindowType.html)
+		this.window_type_whitelist = [Meta.WindowType.NORMAL];
 		
 		// bar creation
 		this.ws_bar = new St.BoxLayout({});
@@ -288,7 +288,7 @@ class WorkspacesBar extends PanelMenu.Button {
 	        this.ws_current.windows = this.ws_current.list_windows().sort(this._sort_windows);
 	        for (let window_index = 0; window_index < this.ws_current.windows.length; ++window_index) {
 	        	this.window = this.ws_current.windows[window_index];
-	        	if (this.window && !(this.window_type_blacklist.includes(this.window.get_window_type()))) {
+	        	if (this.window && this.window_type_whitelist.includes(this.window.get_window_type())) {
 	        		this._create_window_button(ws_index, this.window);
 	        	}
 	        }
