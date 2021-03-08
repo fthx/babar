@@ -287,6 +287,7 @@ class WorkspacesBar extends PanelMenu.Button {
 	        // tasks
 	        this.ws_current = WM.get_workspace_by_index(ws_index);
 			if (FAVORITES_FIRST) {
+				this.favorites_list = AppFavorites.getAppFavorites().getFavorites();
 				this.ws_current.windows = this.ws_current.list_windows().sort(this._sort_windows_favorites_first.bind(this));
 			} else {
 	        	this.ws_current.windows = this.ws_current.list_windows().sort(this._sort_windows);
@@ -446,16 +447,18 @@ class WorkspacesBar extends PanelMenu.Button {
     	return w1.get_id() - w2.get_id();
     }
     
-    // sort windows favorite first then by creation date
+    // sort windows by favorite order first then by creation date
     _sort_windows_favorites_first(w1, w2) {
-		//var window_tracker = Shell.WindowTracker.get_default();
-		this.w1_app_id = this.window_tracker.get_window_app(w1).get_id();
-		this.w2_app_id = this.window_tracker.get_window_app(w2).get_id();
-		this.w1_is_favorite = AppFavorites.getAppFavorites().isFavorite(this.w1_app_id);
-		this.w2_is_favorite = AppFavorites.getAppFavorites().isFavorite(this.w2_app_id);
+		this.w1_app = this.window_tracker.get_window_app(w1);
+		this.w2_app = this.window_tracker.get_window_app(w2);
+		this.w1_is_favorite = AppFavorites.getAppFavorites().isFavorite(this.w1_app.get_id());
+		this.w2_is_favorite = AppFavorites.getAppFavorites().isFavorite(this.w2_app.get_id());
 
-		if (this.w1_is_favorite == this.w2_is_favorite) {
-			return w1.get_id() - w2.get_id();
+		if (!this.w1_is_favorite && !this.w2_is_favorite) {
+			return this._sort_windows(w1, w2);
+		}
+		if (this.w1_is_favorite && this.w2_is_favorite) {
+			return this.favorites_list.indexOf(this.w1_app) - this.favorites_list.indexOf(this.w2_app);
 		}
 		if (this.w1_is_favorite && !this.w2_is_favorite) {
 			return -1;
