@@ -44,6 +44,7 @@ var HIDDEN_OPACITY = 127;
 var UNFOCUSED_OPACITY = 255;
 var FOCUSED_OPACITY = 255;
 var DESATURATE_ICONS = false;
+var FAVORITES_FIRST = false;
 var DISPLAY_ACTIVITIES = false;
 var DISPLAY_APP_GRID = true;
 var DISPLAY_PLACES_ICON = true;
@@ -285,7 +286,11 @@ class WorkspacesBar extends PanelMenu.Button {
 	        
 	        // tasks
 	        this.ws_current = WM.get_workspace_by_index(ws_index);
-	        this.ws_current.windows = this.ws_current.list_windows().sort(this._sort_windows);
+			if (FAVORITES_FIRST) {
+				this.ws_current.windows = this.ws_current.list_windows().sort(this._sort_windows_favorites_first.bind(this));
+			} else {
+	        	this.ws_current.windows = this.ws_current.list_windows().sort(this._sort_windows);
+			}
 	        for (let window_index = 0; window_index < this.ws_current.windows.length; ++window_index) {
 	        	this.window = this.ws_current.windows[window_index];
 	        	if (this.window && this.window_type_whitelist.includes(this.window.get_window_type())) {
@@ -440,6 +445,25 @@ class WorkspacesBar extends PanelMenu.Button {
     _sort_windows(w1, w2) {
     	return w1.get_id() - w2.get_id();
     }
+    
+    // sort windows favorite first then by creation date
+    _sort_windows_favorites_first(w1, w2) {
+		//var window_tracker = Shell.WindowTracker.get_default();
+		this.w1_app_id = this.window_tracker.get_window_app(w1).get_id();
+		this.w2_app_id = this.window_tracker.get_window_app(w2).get_id();
+		this.w1_is_favorite = AppFavorites.getAppFavorites().isFavorite(this.w1_app_id);
+		this.w2_is_favorite = AppFavorites.getAppFavorites().isFavorite(this.w2_app_id);
+
+		if (this.w1_is_favorite == this.w2_is_favorite) {
+			return w1.get_id() - w2.get_id();
+		}
+		if (this.w1_is_favorite && !this.w2_is_favorite) {
+			return -1;
+		}
+		if (!this.w1_is_favorite && this.w2_is_favorite) {
+			return 1;
+		}
+	}
 
     // toggle or show overview
     _toggle_ws(ws_index) {
@@ -493,6 +517,7 @@ class Extension {
 		UNFOCUSED_OPACITY = this.settings.get_int('unfocused-opacity');
 		FOCUSED_OPACITY = this.settings.get_int('focused-opacity');
 		DESATURATE_ICONS = this.settings.get_boolean('desaturate-icons');
+		FAVORITES_FIRST = this.settings.get_boolean('favorites-first');
 		DISPLAY_ACTIVITIES = this.settings.get_boolean('display-activities');
 		DISPLAY_APP_GRID = this.settings.get_boolean('display-app-grid');
 		DISPLAY_PLACES_ICON = this.settings.get_boolean('display-places-icon');

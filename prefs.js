@@ -128,6 +128,7 @@ function buildPrefsWidget() {
     
     make_item('Right-click to show move-to-workspace arrows (true)', 'right-click', 'b');
     make_item('Middle-click to close window (true)', 'middle-click', 'b');
+	make_item('Sort favorites first (false)', 'favorites-first', 'b');
 	
     // return widget
     return this.prefsWidget;
