@@ -458,7 +458,11 @@ class WorkspacesBar extends PanelMenu.Button {
 			return this._sort_windows(w1, w2);
 		}
 		if (this.w1_is_favorite && this.w2_is_favorite) {
-			return this.favorites_list.indexOf(this.w1_app) - this.favorites_list.indexOf(this.w2_app);
+			if (this.w1_app == this.w2_app) {
+				return this._sort_windows(w1, w2);
+			} else {
+				return this.favorites_list.indexOf(this.w1_app) - this.favorites_list.indexOf(this.w2_app);
+			}
 		}
 		if (this.w1_is_favorite && !this.w2_is_favorite) {
 			return -1;
