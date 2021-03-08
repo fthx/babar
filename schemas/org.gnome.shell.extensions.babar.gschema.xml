@@ -1,101 +1,105 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
 	<schema id="org.gnome.shell.extensions.babar" path="/org/gnome/shell/extensions/babar/">
-	
+
 		<key name="reduce-padding" type="b">
 			<default>true</default>
 		</key>
-	
+
 		<key name="app-grid-icon-name" type="s">
 			<default>'view-app-grid-symbolic'</default>
 		</key>
-		
+
 		<key name="places-icon-name" type="s">
 			<default>'folder-symbolic'</default>
 		</key>
-		
+
 		<key name="favorites-icon-name" type="s">
 			<default>'starred-symbolic'</default>
 		</key>
-		
+
 		<key name="fallback-icon-name" type="s">
 			<default>'applications-system-symbolic'</default>
 		</key>
-		
+
 		<key name="icon-size" type="i">
 			<default>20</default>
 		</key>
-		
+
 		<key name="rounded-workspaces-buttons" type="b">
 			<default>false</default>
 		</key>
-		
+
 		<key name="tooltip-vertical-padding" type="i">
 			<default>10</default>
 		</key>
-		
+
 		<key name="hidden-opacity" type="i">
 			<default>127</default>
 		</key>
-		
+
 		<key name="unfocused-opacity" type="i">
 			<default>255</default>
 		</key>
-		
+
 		<key name="focused-opacity" type="i">
 			<default>255</default>
 		</key>
-		
+
 		<key name="desaturate-icons" type="b">
 			<default>false</default>
 		</key>
-		
+
 		<key name="display-activities" type="b">
 			<default>false</default>
 		</key>
-		
+
 		<key name="display-app-grid" type="b">
 			<default>true</default>
 		</key>
-		
+
 		<key name="display-places-icon" type="b">
 			<default>true</default>
 		</key>
-		
+
 		<key name="display-favorites" type="b">
 			<default>true</default>
 		</key>
-		
+
 		<key name="display-window-control" type="b">
 			<default>false</default>
 		</key>
-		
+
 		<key name="display-workspaces" type="b">
 			<default>true</default>
 		</key>
-		
+
 		<key name="display-tasks" type="b">
 			<default>true</default>
 		</key>
-		
+
 		<key name="display-app-menu" type="b">
 			<default>false</default>
 		</key>
-		
+
 		<key name="display-dash" type="b">
 			<default>true</default>
 		</key>
-		
+
 		<key name="display-workspaces-thumbnails" type="b">
 			<default>true</default>
 		</key>
-		
+
 		<key name="right-click" type="b">
 			<default>true</default>
 		</key>
-		
+
 		<key name="middle-click" type="b">
 			<default>true</default>
+		</key>
+
+		<key name="sort-favorites-first" type="b">
+			<default>false</default>
 		</key>
 
 	</schema>

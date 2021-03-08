@@ -1,4 +1,4 @@
-/* 
+/*
 	BaBar
 	by Francois Thirioux
 	GitHub contributors: @fthx, @wooque
@@ -54,20 +54,21 @@ var DISPLAY_TASKS = true;
 var DISPLAY_APP_MENU = false;
 var DISPLAY_DASH = true;
 var DISPLAY_WORKSPACES_THUMBNAILS = true;
+var SORT_FAVORITES_FIRST = false;
 
 
 var AppGridButton = GObject.registerClass(
 class AppGridButton extends PanelMenu.Button {
 	_init() {
 		super._init(0.0, 'Babar-AppGrid');
-		
+
 		this.app_grid_button = new St.BoxLayout({visible: true, reactive: true, can_focus: true, track_hover: true});
 		this.app_grid_button.icon = new St.Icon({icon_name: APP_GRID_ICON_NAME, style_class: 'system-status-icon'});
         this.app_grid_button.add_child(this.app_grid_button.icon);
         this.app_grid_button.connect('button-press-event', () => Main.overview.viewSelector._toggleAppsPage());
         this.add_child(this.app_grid_button);
 	}
-	
+
 	_destroy() {
 		super.destroy();
 	}
@@ -77,10 +78,10 @@ var FavoritesMenu = GObject.registerClass(
 class FavoritesMenu extends PanelMenu.Button {
 	_init() {
 		super._init(0.0, 'Babar-Favorites');
-		
+
 		// listen to favorites changes
 		this.fav_changed = AppFavorites.getAppFavorites().connect('changed', this._display_favorites.bind(this));
-		
+
 		// make menu button
     	this.fav_menu_button = new St.BoxLayout({});
 		this.fav_menu_icon = new St.Icon({icon_name: FAVORITES_ICON_NAME, style_class: 'system-status-icon'});
@@ -91,24 +92,24 @@ class FavoritesMenu extends PanelMenu.Button {
 		// display favorites list
 		this._display_favorites();
 	}
-	
+
 	// display favorites menu
 	_display_favorites() {
 		// destroy old menu items
 		if (this.menu) {
 			this.menu.removeAll();
 		}
-		
+
 		// get favorites list
     	this.list_fav = AppFavorites.getAppFavorites().getFavorites();
-        
+
         // create favorites items
     	for (let fav_index = 0; fav_index < this.list_fav.length; ++fav_index) {
     		// get favorite app, name and icon
     		this.fav = this.list_fav[fav_index];
     		this.fav_icon = this.fav.create_icon_texture(ICON_SIZE);
     		this.fav_label = new St.Label({text: this.fav.get_name()});
-    		
+
     		// create menu item
     		this.item = new PopupMenu.PopupBaseMenuItem;
     		this.item_box = new St.BoxLayout({style_class: 'favorite', vertical: false});
@@ -119,12 +120,12 @@ class FavoritesMenu extends PanelMenu.Button {
     		this.menu.addMenuItem(this.item);
     	}
 	}
-	
+
 	// activate favorite
     _activate_fav(fav_index) {
     	AppFavorites.getAppFavorites().getFavorites()[fav_index].open_new_window(-1);
     }
-    
+
     // remove signals, destroy workspaces bar
 	_destroy() {
 		if (this.fav_changed) {
@@ -138,24 +139,24 @@ var WindowControlButton = GObject.registerClass(
 class WindowControlButton extends PanelMenu.Button {
 	_init() {
 		super._init(0.0, 'Babar-WindowControlButton');
-		
+
 		this.window_control_button = new St.BoxLayout({visible: true, reactive: true, can_focus: true, track_hover: true});
-		
+
 		this.window_control_button_previous = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
 		this.window_control_button_previous_icon = new St.Icon({icon_name: MOVE_TO_PREVIOUS_WORKSPACE_ICON_NAME, style_class: 'system-status-icon'});
         this.window_control_button_previous.set_child(this.window_control_button_previous_icon);
         this.window_control_button_previous.connect('button-press-event', this._move_to_previous_workspace.bind(this));
-        
+
         this.window_control_button_next = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
 		this.window_control_button_next_icon = new St.Icon({icon_name: MOVE_TO_NEXT_WORKSPACE_ICON_NAME, style_class: 'system-status-icon'});
         this.window_control_button_next.set_child(this.window_control_button_next_icon);
         this.window_control_button_next.connect('button-press-event', this._move_to_next_workspace.bind(this));
-        
+
         this.window_control_button.add_child(this.window_control_button_previous);
         this.window_control_button.add_child(this.window_control_button_next);
         this.add_child(this.window_control_button);
 	}
-	
+
 	// move focused window to next workspace (beware of possibly fixed number of ws)
 	_move_to_next_workspace() {
 		this.ws_count = WM.get_n_workspaces();
@@ -166,7 +167,7 @@ class WindowControlButton extends PanelMenu.Button {
         	this.focused_window.activate(global.get_current_time());
         }
 	}
-        
+
     // move focused window to previous workspace
 	_move_to_previous_workspace() {
 		this.ws_count = WM.get_n_workspaces();
@@ -177,7 +178,7 @@ class WindowControlButton extends PanelMenu.Button {
         	this.focused_window.activate(global.get_current_time());
         }
 	}
-	
+
 	_destroy() {
 		super.destroy();
 	}
@@ -187,29 +188,30 @@ var WorkspacesBar = GObject.registerClass(
 class WorkspacesBar extends PanelMenu.Button {
 	_init() {
 		super._init(0.0, 'Babar-Tasks');
-		
+
 		// tracker for windows
 		this.window_tracker = Shell.WindowTracker.get_default();
-		
+
 		// define gsettings schema for workspaces names, get workspaces names, signal for settings key changed
 		this.workspaces_settings = new Gio.Settings({schema: WORKSPACES_SCHEMA});
 		this.workspaces_names_changed = this.workspaces_settings.connect(`changed::${WORKSPACES_KEY}`, this._update_workspaces_names.bind(this));
-		
+		this._sort_favorites_first = this._sort_favorites_first.bind(this);
+
 		// define windows that need an icon (see https://www.roojs.org/seed/gir-1.2-gtk-3.0/seed/Meta.WindowType.html)
 		this.window_type_whitelist = [Meta.WindowType.NORMAL];
-		
+
 		// bar creation
 		this.ws_bar = new St.BoxLayout({});
         this._update_workspaces_names();
         this.add_child(this.ws_bar);
-        
+
         // window button tooltip creation
         this.window_tooltip = new St.BoxLayout({style_class: 'window-tooltip'});
 		this.window_tooltip.label = new St.Label({y_align: Clutter.ActorAlign.CENTER, text: ""});
 		this.window_tooltip.add_child(this.window_tooltip.label);
 		this.window_tooltip.hide();
 		Main.layoutManager.addChrome(this.window_tooltip);
-        
+
         // signals
 		this._ws_number_changed = WM.connect('notify::n-workspaces', this._update_ws.bind(this));
 		this._restacked = global.display.connect('restacked', this._update_ws.bind(this));
@@ -236,7 +238,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		this.ws_bar.destroy();
 		super.destroy();
 	}
-	
+
 	// update workspaces names
 	_update_workspaces_names() {
 		this.workspaces_names = this.workspaces_settings.get_strv(WORKSPACES_KEY);
@@ -247,17 +249,17 @@ class WorkspacesBar extends PanelMenu.Button {
     _update_ws() {
     	// destroy old workspaces bar buttons and signals
     	this.ws_bar.destroy_all_children();
-    	
+
     	// get number of workspaces
         this.ws_count = WM.get_n_workspaces();
         this.active_ws_index = WM.get_active_workspace_index();
-        		
+
 		// display all current workspaces and tasks buttons
         for (let ws_index = 0; ws_index < this.ws_count; ++ws_index) {
         	// workspace
-			var ws_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});						
+			var ws_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
 			var ws_box_label = new St.Label({y_align: Clutter.ActorAlign.CENTER});
-			
+
 			if (!ROUNDED_WORKSPACES_BUTTONS) {
 				if (ws_index == this.active_ws_index) {
 					ws_box_label.style_class = 'workspace-active-squared';
@@ -271,7 +273,7 @@ class WorkspacesBar extends PanelMenu.Button {
 					ws_box_label.style_class = 'workspace-inactive-rounded';
 				}
 			}
-			
+
 			if (this.workspaces_names[ws_index]) {
 				ws_box_label.set_text("  " + this.workspaces_names[ws_index] + "  ");
 			} else {
@@ -282,10 +284,15 @@ class WorkspacesBar extends PanelMenu.Button {
 			if (DISPLAY_WORKSPACES) {
 	        	this.ws_bar.add_child(ws_box);
 	        }
-	        
+
 	        // tasks
 	        this.ws_current = WM.get_workspace_by_index(ws_index);
-	        this.ws_current.windows = this.ws_current.list_windows().sort(this._sort_windows);
+	        this.ws_current.windows = this.ws_current.list_windows();
+            if (SORT_FAVORITES_FIRST) {
+                this.ws_current.windows = this._sort_favorites_first(this.ws_current.windows);
+            } else {
+                this.ws_current.windows = this.ws_current.windows.sort(this._sort_windows);
+            }
 	        for (let window_index = 0; window_index < this.ws_current.windows.length; ++window_index) {
 	        	this.window = this.ws_current.windows[window_index];
 	        	if (this.window && this.window_type_whitelist.includes(this.window.get_window_type())) {
@@ -294,32 +301,32 @@ class WorkspacesBar extends PanelMenu.Button {
 	        }
 		}
     }
-    
+
     // create window button ; ws = workspace, w = window
-    _create_window_button(ws_index, w) {    	
+    _create_window_button(ws_index, w) {
     	// move to previous/next workspace buttons (will be shown on w button hover)
     	var move_previous = new St.Bin({visible: false, reactive: true, can_focus: true, track_hover: true});
     	var move_previous_icon = new St.Icon({icon_name: MOVE_TO_PREVIOUS_WORKSPACE_ICON_NAME, style_class: 'system-status-icon'});
     	move_previous.set_child(move_previous_icon);
-    	
+
     	var move_next = new St.Bin({visible: false, reactive: true, can_focus: true, track_hover: true});
     	var move_next_icon = new St.Icon({icon_name: MOVE_TO_NEXT_WORKSPACE_ICON_NAME, style_class: 'system-status-icon'});
     	move_next.set_child(move_next_icon);
-    	
+
     	if (!w.is_on_all_workspaces()) {
 			move_previous.connect('button-press-event', () => this._move_to_previous_workspace(ws_index, w));
 			move_next.connect('button-press-event', () => this._move_to_next_workspace(ws_index, w));
 		}
-    	
+
         // windows on all workspaces have to be displayed only once
     	if (!w.is_on_all_workspaces() || ws_index == 0) {
 		    // create button
 			var w_box = new St.BoxLayout({visible: true, reactive: true, can_focus: true, track_hover: true, style_class: 'window-box'});
 		    var w_box_app = this.window_tracker.get_window_app(w);
-		    
+
 		    // arrows state
 		    w_box.arrows = false;
-		    
+
 		    // create w button and its icon
 		    var w_box_button = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
 		    var w_box_icon;
@@ -333,13 +340,13 @@ class WorkspacesBar extends PanelMenu.Button {
 			w_box_button.set_child(w_box_icon);
 			w_box_button.connect('button-press-event', (widget, event) => this._on_button_press(widget, event, w_box, ws_index, w));
 			w_box.connect('notify::hover', () => this._on_button_hover(w_box, w.title));
-			
+
 			// desaturate option
 			if (DESATURATE_ICONS) {
 				this.desaturate = new Clutter.DesaturateEffect();
 				w_box_icon.add_effect(this.desaturate);
 			}
-		    
+
 			// set icon style and opacity following window state
 		    if (w.is_hidden()) {
 				w_box_button.style_class = 'window-hidden';
@@ -353,19 +360,19 @@ class WorkspacesBar extends PanelMenu.Button {
 				w_box_icon.set_opacity(UNFOCUSED_OPACITY);
 				}
 		    }
-        
+
 		    // add button in task bar
 		    w_box.add_child(w_box_button);
 		    w_box.add_child(move_previous);
 		   	w_box.add_child(move_next);
 		   	if (w.is_on_all_workspaces()) {
-		   		this.ws_bar.insert_child_at_index(w_box, 0);	
+		   		this.ws_bar.insert_child_at_index(w_box, 0);
 		   	} else {
 		    	this.ws_bar.add_child(w_box);
 		    }
 		}
 	}
-	
+
 	// move window w from workspace ws to previous workspace
 	_move_to_previous_workspace(ws_index, w) {
 		if (ws_index > 0) {
@@ -376,7 +383,7 @@ class WorkspacesBar extends PanelMenu.Button {
         }
         this.window_tooltip.hide();
     }
-    
+
     // move window w from workspace ws to next workspace
 	_move_to_next_workspace(ws_index, w) {
 		if (ws_index < this.ws_count - 1) {
@@ -387,7 +394,7 @@ class WorkspacesBar extends PanelMenu.Button {
         }
         this.window_tooltip.hide();
     }
-	
+
 	// on window w button press
     _on_button_press(widget, event, w_box, ws_index, w) {
     	// left-click: toggle window
@@ -396,7 +403,7 @@ class WorkspacesBar extends PanelMenu.Button {
 				if (w.can_minimize()) {
 		   			w.minimize();
 		   		}
-		   	} else {	
+		   	} else {
 				w.activate(global.get_current_time());
 			}
 			if (Main.overview.visible) {
@@ -406,7 +413,7 @@ class WorkspacesBar extends PanelMenu.Button {
 				WM.get_workspace_by_index(ws_index).activate(global.get_current_time());
 			}
 		}
-		
+
 		// right-click: toggle arrows
 		if (RIGHT_CLICK && event.get_button() == 3 && !w.is_on_all_workspaces()) {
 			if (!w_box.arrows) {
@@ -427,18 +434,57 @@ class WorkspacesBar extends PanelMenu.Button {
 				w_box.arrows = false;
 			}
 		}
-		
+
 		// middle-click: close window
 		if (MIDDLE_CLICK && event.get_button() == 2 && w.can_close()) {
 			w.delete(global.get_current_time());
 			this.window_tooltip.hide();
 		}
-		
+
     }
-    
+
     // sort windows by creation date
     _sort_windows(w1, w2) {
     	return w1.get_id() - w2.get_id();
+    }
+
+    // sort windows so favorites go first
+    _sort_favorites_first(windows) {
+
+        var app_ids = windows.reduce((prev, curr) => {
+            var app_id = this.window_tracker.get_window_app(curr).app_info.get_id();
+
+            prev[curr.get_id()] = app_id;
+            return prev;
+        }, {});
+
+        var fav_app_ids = AppFavorites.getAppFavorites().getFavorites().map(
+            f => f.app_info.get_id()
+        );
+
+        windows.sort((w1, w2) => {
+            var w1_id = w1.get_id();
+            var w2_id = w2.get_id();
+
+            var w1_app_id = app_ids[w1_id];
+            var w2_app_id = app_ids[w2_id];
+
+            var w1_fav_index = fav_app_ids.indexOf(w1_app_id);
+            var w2_fav_index = fav_app_ids.indexOf(w2_app_id);
+
+            if ((w1_fav_index == -1 && w2_fav_index == -1) || (w1_fav_index == w2_fav_index)) {
+                return w1_id - w2_id;
+            } else if (w1_fav_index == -1) {
+                // w2 favorite
+                return 1;
+            } else if (w2_fav_index == -1) {
+                // w1 favorite
+                return -1;
+            } else {
+                return w1_fav_index - w2_fav_index;
+            }
+        });
+        return windows;
     }
 
     // toggle or show overview
@@ -450,7 +496,7 @@ class WorkspacesBar extends PanelMenu.Button {
 			Main.overview.show();
 		}
     }
-    
+
     // on w button hover: toggle tooltip
     _on_button_hover(w_box, window_title) {
 		if (window_title && w_box && w_box.get_hover()) {
@@ -471,14 +517,14 @@ class WorkspacesBar extends PanelMenu.Button {
 class Extension {
 	constructor() {
 	}
-	
+
 	// get settings
     _get_settings() {
         this.settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.babar');
-        
+
         this.settings_already_changed = false;
 		this.settings_changed = this.settings.connect('changed', this._settings_changed.bind(this));
-		
+
 		RIGHT_CLICK = this.settings.get_boolean('right-click');
 		MIDDLE_CLICK = this.settings.get_boolean('middle-click');
 		REDUCE_PADDING = this.settings.get_boolean('reduce-padding');
@@ -503,16 +549,17 @@ class Extension {
 		DISPLAY_APP_MENU = this.settings.get_boolean('display-app-menu');
 		DISPLAY_DASH = this.settings.get_boolean('display-dash');
 		DISPLAY_WORKSPACES_THUMBNAILS = this.settings.get_boolean('display-workspaces-thumbnails');
+        SORT_FAVORITES_FIRST = this.settings.get_boolean('sort-favorites-first');
     }
-    
+
     // restart extension after settings changed
     _settings_changed() {
     	if (!this.settings_already_changed) {
     		Main.notify("Please restart BaBar extension to apply changes.");
     		this.settings_already_changed = true;
     	}
-    }    
-    
+    }
+
     // toggle Activities button
 	_show_activities(show) {
 		this.activities_button = Main.panel.statusArea['activities'];
@@ -524,8 +571,8 @@ class Extension {
 			}
 		}
 	}
-	
-	// toggle Places Status Indicator extension label to folder	
+
+	// toggle Places Status Indicator extension label to folder
 	_show_places_icon(show_icon) {
 		this.places_indicator = Main.panel.statusArea['places-menu'];
 		if (this.places_indicator) {
@@ -540,7 +587,7 @@ class Extension {
 			}
 		}
 	}
-	
+
 	// toggle dash in overview
 	_show_dash(show) {
 		if (show) {
@@ -549,66 +596,66 @@ class Extension {
 			Main.overview.dash.hide();
 		}
 	}
-	
+
 	// toggle workspaces thumbnails in overview
 	_hide_workspaces_thumbnails() {
 		Main.overview._overview._controls._thumbnailsBox.hide();
 	}
 
-    enable() {    
+    enable() {
     	// get settings
     	this._get_settings();
-    	
+
     	// top panel left box padding
     	if (REDUCE_PADDING) {
     		Main.panel._leftBox.add_style_class_name('leftbox-reduced-padding');
     	}
-    
+
     	// Activities button
     	if (!DISPLAY_ACTIVITIES) {
     		this._show_activities(false);
     	}
-    	
+
     	// app grid
 		if (DISPLAY_APP_GRID) {
 			this.app_grid = new AppGridButton();
 			Main.panel.addToStatusArea('babar-app-grid-button', this.app_grid, 0, 'left');
 		}
-		
+
 		// Places label to icon
 		if (DISPLAY_PLACES_ICON) {
 			this._show_places_icon(true);
 			this.extensions_changed = Main.extensionManager.connect('extension-state-changed', () => this._show_places_icon(true));
 		}
-		
+
 		// favorites
 		if (DISPLAY_FAVORITES) {
 			this.favorites_menu = new FavoritesMenu();
 			Main.panel.addToStatusArea('babar-favorites-menu', this.favorites_menu, 3, 'left');
 		}
-		
+
 		// window control
 		if (DISPLAY_WINDOW_CONTROL) {
 			this.window_control = new WindowControlButton();
 			Main.panel.addToStatusArea('babar-window-control', this.window_control, 4, 'left');
 		}
-		
+
 		// tasks
 		if (DISPLAY_TASKS) {
 			this.workspaces_bar = new WorkspacesBar();
 			Main.panel.addToStatusArea('babar-workspaces-bar', this.workspaces_bar, 5, 'left');
 		}
-		
+
 		// AppMenu
     	if (!DISPLAY_APP_MENU) {
 			AppMenu.container.hide();
 		}
-		
+
 		// dash
 		if (!DISPLAY_DASH) {
 			this._show_dash(false);
 		}
-		
+
 		// workspaces thumbnails
 		if (!DISPLAY_WORKSPACES_THUMBNAILS) {
 			this.showing_overview = Main.overview.connect('showing', this._hide_workspaces_thumbnails.bind(this));
@@ -620,49 +667,49 @@ class Extension {
     	if (DISPLAY_APP_GRID && this.app_grid) {
     		this.app_grid._destroy();
     	}
-    	
+
     	// favorites
     	if (DISPLAY_FAVORITES && this.favorites_menu) {
     		this.favorites_menu._destroy();
     	}
-    	
+
     	// window control
     	if (DISPLAY_WINDOW_CONTROL && this.window_control) {
 			this.window_control._destroy();
 		}
-    	
+
     	// workspaces bar
     	if (DISPLAY_TASKS && this.workspaces_bar) {
     		this.workspaces_bar._destroy();
     	}
-    	
+
     	// top panel left box padding
     	if (REDUCE_PADDING) {
     		Main.panel._leftBox.remove_style_class_name('leftbox-reduced-padding');
     	}
-    	
+
     	// Places label and unwatch extensions changes
     	if (DISPLAY_PLACES_ICON && this.places_indicator) {
     		this._show_places_icon(false);
     		Main.extensionManager.disconnect(this.extensions_changed);
     	}
-    	
+
     	// Activities button
     	this._show_activities(true);
-    	
+
     	// AppMenu icon
     	if (!Main.overview.visible && !Main.sessionMode.isLocked) {
 			AppMenu.container.show();
 		}
-		
+
 		// dash
 		this._show_dash(true);
-		
+
 		// workspaces thumbnails
 		if (!DISPLAY_WORKSPACES_THUMBNAILS && this.showing_overview) {
 			Main.overview.disconnect(this.showing_overview);
 		}
-		
+
 		// unwatch settings
 		this.settings.disconnect(this.settings_changed);
     }
