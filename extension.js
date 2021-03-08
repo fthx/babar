@@ -472,7 +472,7 @@ class WorkspacesBar extends PanelMenu.Button {
             var w1_fav_index = fav_app_ids.indexOf(w1_app_id);
             var w2_fav_index = fav_app_ids.indexOf(w2_app_id);
 
-            if ((w1_fav_index == -1 && w2_fav_index == -1) || (w1_fav_index == w2_fav_index)) {
+            if (w1_fav_index == w2_fav_index) {
                 return w1_id - w2_id;
             } else if (w1_fav_index == -1) {
                 // w2 favorite
