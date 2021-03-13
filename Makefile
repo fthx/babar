@@ -12,7 +12,7 @@ build:
 	echo "Building extension"
 	@$(GLIB_COMPILE_SCHEMAS) ./schemas
 	mkdir -p build/$(EXTENSION_UUID)
-	cp -r schemas ui *.js metadata.json README.md *.css build/$(EXTENSION_UUID)
+	cp -r schemas *.js metadata.json README.md *.css build/$(EXTENSION_UUID)
 
 install: build
 	echo "Installing extension files in $(EXTENSION_INSTALL_DIR)"
