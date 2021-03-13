@@ -23,7 +23,7 @@ function make_item(label, schema, type, min, max) {
 		    halign: Gtk.Align.END,
 		    visible: true
 		});
-		
+
 		prefsWidget.attach(this.item_value, 1, this.row, 1, 1);
 
     	this.settings.bind(
@@ -33,7 +33,7 @@ function make_item(label, schema, type, min, max) {
 		    Gio.SettingsBindFlags.DEFAULT
     	);
 	}
-	
+
 	if (type == 'i') {
 		this.item_adjustment = new Gtk.Adjustment({
 			lower: min,
@@ -46,7 +46,7 @@ function make_item(label, schema, type, min, max) {
 		    halign: Gtk.Align.END,
 		    visible: true
 		});
-		
+
 		prefsWidget.attach(this.item_value, 1, this.row, 1, 1);
 
 		this.settings.bind(
@@ -56,14 +56,14 @@ function make_item(label, schema, type, min, max) {
 		    Gio.SettingsBindFlags.DEFAULT
 		);
 	}
-	
+
 	if (type == 's') {
 		this.item_value = new Gtk.Entry({
 			text: this.settings.get_string(schema),
 		    halign: Gtk.Align.END,
 		    visible: true
 		});
-		
+
 		prefsWidget.attach(this.item_value, 1, this.row, 1, 1);
 
 		this.settings.bind(
@@ -73,7 +73,7 @@ function make_item(label, schema, type, min, max) {
 		    Gio.SettingsBindFlags.DEFAULT
 		);
 	}
-        
+
     this.row += 1;
 }
 
@@ -85,20 +85,20 @@ function make_section_title(title) {
         visible: true
     });
     prefsWidget.attach(this.section_title, 0, this.row, 2, 1);
-    
+
     this.row += 1;
 }
 
 function buildPrefsWidget() {
 	this.settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.babar');
-        
+
     this.prefsWidget = new Gtk.Grid({
-		'margin-start': 18,
+        'margin-start': 18,
         'margin-end': 18,
         'margin-top': 18,
         'margin-bottom': 18,
-        'column-spacing': 96,
-        'row-spacing': 8,
+        column_spacing: 96,
+        row_spacing: 8,
         visible: true
     });
     this.row = 0;
@@ -115,9 +115,9 @@ function buildPrefsWidget() {
     make_item('Application menu (false)', 'display-app-menu', 'b');
     make_item('Dash in overview (true)', 'display-dash', 'b');
     make_item('Workspaces thumbnails in overview (true)', 'display-workspaces-thumbnails', 'b');
-    
+
     make_section_title('Appearance (default value)');
-    
+
     make_item('Reduce elements padding (true)', 'reduce-padding', 'b');
     make_item('Places extension label to icon (true)', 'display-places-icon', 'b');
     make_item('Rounded workspaces icons (false)', 'rounded-workspaces-buttons', 'b');
@@ -126,13 +126,13 @@ function buildPrefsWidget() {
     make_item('Applications grid icon (view-app-grid-symbolic)', 'app-grid-icon-name', 's');
     make_item('Places icon (folder-symbolic)', 'places-icon-name', 's');
     make_item('Favorites icon (starred-symbolic)', 'favorites-icon-name', 's');
-    
+
     make_section_title('Behaviour (default value)');
-    
+
     make_item('Right-click to show move-to-workspace arrows (true)', 'right-click', 'b');
     make_item('Middle-click to close window (true)', 'middle-click', 'b');
 	make_item('Sort favorites first (false)', 'favorites-first', 'b');
-	
+
     // return widget
     return this.prefsWidget;
 }
