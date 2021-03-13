@@ -451,6 +451,9 @@ class WorkspacesBar extends PanelMenu.Button {
     _sort_windows_favorites_first(w1, w2) {
 		this.w1_app = this.window_tracker.get_window_app(w1);
 		this.w2_app = this.window_tracker.get_window_app(w2);
+		if (!this.w1_app || !this.w2_app) {
+			return 0;
+		}
 		this.w1_is_favorite = AppFavorites.getAppFavorites().isFavorite(this.w1_app.get_id());
 		this.w2_is_favorite = AppFavorites.getAppFavorites().isFavorite(this.w2_app.get_id());
 
