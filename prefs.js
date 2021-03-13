@@ -93,9 +93,12 @@ function buildPrefsWidget() {
 	this.settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.babar');
         
     this.prefsWidget = new Gtk.Grid({
-        margin: 18,
-        column_spacing: 96,
-        row_spacing: 8,
+		'margin-start': 18,
+        'margin-end': 18,
+        'margin-top': 18,
+        'margin-bottom': 18,
+        'column-spacing': 96,
+        'row-spacing': 8,
         visible: true
     });
     this.row = 0;

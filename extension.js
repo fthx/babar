@@ -1,7 +1,7 @@
 /* 
 	BaBar
 	by Francois Thirioux
-	GitHub contributors: @fthx, @wooque
+	GitHub contributors: @fthx, @wooque, @frandieguez
 	License GPL v3
 */
 
