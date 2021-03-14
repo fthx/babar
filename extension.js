@@ -18,6 +18,9 @@ const Util = imports.misc.util;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
+// get Shell version
+var is_shell_version_40 = imports.misc.config.PACKAGE_VERSION.split('.')[0] >= 40;
+
 // translation needed to restore Places label, if any
 const Gettext = imports.gettext.domain('gnome-shell-extensions');
 const _ = Gettext.gettext;
@@ -65,7 +68,11 @@ class AppGridButton extends PanelMenu.Button {
 		this.app_grid_button = new St.BoxLayout({visible: true, reactive: true, can_focus: true, track_hover: true});
 		this.app_grid_button.icon = new St.Icon({icon_name: APP_GRID_ICON_NAME, style_class: 'system-status-icon'});
         this.app_grid_button.add_child(this.app_grid_button.icon);
-        this.app_grid_button.connect('button-press-event', () => Main.overview.viewSelector._toggleAppsPage());
+		if (is_shell_version_40) {
+			this.app_grid_button.connect('button-press-event', () => Main.overview.showApps());
+		} else {
+        	this.app_grid_button.connect('button-press-event', () => Main.overview.viewSelector._toggleAppsPage());
+		}
         this.add_child(this.app_grid_button);
 	}
 	
@@ -86,7 +93,9 @@ class FavoritesMenu extends PanelMenu.Button {
     	this.fav_menu_button = new St.BoxLayout({});
 		this.fav_menu_icon = new St.Icon({icon_name: FAVORITES_ICON_NAME, style_class: 'system-status-icon'});
         this.fav_menu_button.add_child(this.fav_menu_icon);
-        this.fav_menu_button.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
+		if (!is_shell_version_40) {
+			this.fav_menu_button.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
+		}
         this.add_child(this.fav_menu_button);
 
 		// display favorites list
