@@ -576,10 +576,10 @@ class Extension {
 			this.places_indicator.remove_child(this.places_indicator.get_first_child());
 			if (show_icon) {
 				this.places_icon = new St.Icon({icon_name: PLACES_ICON_NAME, style_class: 'system-status-icon'});
-				this.places_box.add_child(this.places_icon);
+				this.places_indicator.add_child(this.places_icon);
 			} else {
 				this.places_label = new St.Label({text: _('Places'), y_expand: true, y_align: Clutter.ActorAlign.CENTER});
-				this.places_box.add_child(this.places_label);
+				this.places_indicator.add_child(this.places_label);
 			}
 		}
 		if (this.places_indicator && !is_shell_version_40) {
