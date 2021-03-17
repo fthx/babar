@@ -243,6 +243,9 @@ class WorkspacesBar extends PanelMenu.Button {
 		if (this.hide_tooltip_timeout) {
 			GLib.source_remove(this.hide_tooltip_timeout);
 		}
+		if (this.window_tooltip) {
+			this.window_tooltip.hide();
+		}
 		this.ws_bar.destroy();
 		super.destroy();
 	}
