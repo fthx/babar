@@ -1,7 +1,7 @@
 /* 
 	BaBar
-	by Francois Thirioux
-	GitHub contributors: @fthx, @wooque, @frandieguez
+	(c) Francois Thirioux 2021
+	GitHub contributors: @fthx, @wooque, @frandieguez, @kenoh
 	License GPL v3
 */
 
@@ -86,10 +86,8 @@ class FavoritesMenu extends PanelMenu.Button {
 	_init() {
 		super._init(0.0, 'Babar-Favorites');
 		
-		// listen to favorites changes
 		this.fav_changed = AppFavorites.getAppFavorites().connect('changed', this._display_favorites.bind(this));
 		
-		// make menu button
     	this.fav_menu_button = new St.BoxLayout({});
 		this.fav_menu_icon = new St.Icon({icon_name: FAVORITES_ICON_NAME, style_class: 'system-status-icon'});
         this.fav_menu_button.add_child(this.fav_menu_icon);
@@ -98,7 +96,6 @@ class FavoritesMenu extends PanelMenu.Button {
 		}
         this.add_child(this.fav_menu_button);
 
-		// display favorites list
 		this._display_favorites();
 	}
 	
@@ -113,13 +110,11 @@ class FavoritesMenu extends PanelMenu.Button {
     	this.list_fav = AppFavorites.getAppFavorites().getFavorites();
         
         // create favorites items
-    	for (let fav_index = 0; fav_index < this.list_fav.length; ++fav_index) {
-    		// get favorite app, name and icon
+		for (let fav_index = 0; fav_index < this.list_fav.length; ++fav_index) {
     		this.fav = this.list_fav[fav_index];
     		this.fav_icon = this.fav.create_icon_texture(ICON_SIZE);
     		this.fav_label = new St.Label({text: this.fav.get_name()});
-    		
-    		// create menu item
+			
     		this.item = new PopupMenu.PopupBaseMenuItem;
     		this.item_box = new St.BoxLayout({style_class: 'favorite', vertical: false});
     		this.item_box.add_child(this.fav_icon);
@@ -131,7 +126,7 @@ class FavoritesMenu extends PanelMenu.Button {
 	}
 	
 	// activate favorite
-    _activate_fav(fav_index) {
+	_activate_fav(fav_index) {
     	AppFavorites.getAppFavorites().getFavorites()[fav_index].open_new_window(-1);
     }
     
@@ -242,6 +237,9 @@ class WorkspacesBar extends PanelMenu.Button {
 		}
 		if (this.hide_tooltip_timeout) {
 			GLib.source_remove(this.hide_tooltip_timeout);
+		}
+		if (this.window_tooltip) {
+			this.window_tooltip.destroy();
 		}
 		this.ws_bar.destroy();
 		super.destroy();
