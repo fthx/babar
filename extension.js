@@ -68,12 +68,20 @@ class AppGridButton extends PanelMenu.Button {
 		this.app_grid_button = new St.BoxLayout({visible: true, reactive: true, can_focus: true, track_hover: true});
 		this.app_grid_button.icon = new St.Icon({icon_name: APP_GRID_ICON_NAME, style_class: 'system-status-icon'});
         this.app_grid_button.add_child(this.app_grid_button.icon);
-		if (is_shell_version_40) {
-			this.app_grid_button.connect('button-press-event', () => Main.overview.showApps());
-		} else {
-        	this.app_grid_button.connect('button-press-event', () => Main.overview.viewSelector._toggleAppsPage());
-		}
+		this.app_grid_button.connect('button-press-event', this._show_apps_page.bind(this));
         this.add_child(this.app_grid_button);
+	}
+
+	_show_apps_page() {
+		if (Main.overview.visible) {
+			Main.overview.hide();
+		} else {
+			if (is_shell_version_40) {
+				Main.overview.showApps();
+			} else {
+				Main.overview.viewSelector._toggleAppsPage();
+			}
+		}
 	}
 	
 	_destroy() {
