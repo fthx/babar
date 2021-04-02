@@ -23,7 +23,7 @@
 		</key>
 		
 		<key name="icon-size" type="i">
-			<default>20</default>
+			<default>18</default>
 		</key>
 		
 		<key name="rounded-workspaces-buttons" type="b">
