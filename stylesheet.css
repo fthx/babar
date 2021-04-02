@@ -1,11 +1,11 @@
 .leftbox-reduced-padding .panel-button {
-  -natural-hpadding: 1px;
-  -minimum-hpadding: 1px;
+  -natural-hpadding: 4px;
+  -minimum-hpadding: 4px;
 }
 
 .workspace-active-squared {
-  margin-left: 16px;
-  margin-right: 12px;
+  margin-left: 10px;
+  margin-right: 10px;
   background-color: rgba(204, 204, 204, 1);
   color: rgba(0, 0, 0, 1);
   border: 1px solid rgba(0, 0, 0, 0.7);
@@ -13,8 +13,8 @@
 }
 
 .workspace-inactive-squared {
-  margin-left: 16px;
-  margin-right: 12px;
+  margin-left: 10px;
+  margin-right: 10px;
   background-color: rgba(127, 127, 127, 1);
   color: rgba(0, 0, 0, 1);
   border: 1px solid rgba(0, 0, 0, 0.7);
@@ -22,8 +22,8 @@
 }
 
 .workspace-active-rounded {
-  margin-left: 16px;
-  margin-right: 12px;
+  margin-left: 10px;
+  margin-right: 10px;
   background-color: rgba(204, 204, 204, 1);
   color: rgba(0, 0, 0, 1);
   border: 1px solid rgba(0, 0, 0, 0.7);
@@ -31,8 +31,8 @@
 }
 
 .workspace-inactive-rounded {
-  margin-left: 16px;
-  margin-right: 12px;
+  margin-left: 10px;
+  margin-right: 10px;
   background-color: rgba(127, 127, 127, 1);
   color: rgba(0, 0, 0, 1);
   border: 1px solid rgba(0, 0, 0, 0.7);
@@ -47,13 +47,15 @@
 }
 
 .window-box {
-  margin-left: 0px;
-  margin-right: 8px;
+  margin-left: 4px;
+  margin-right: 4px;
   border-radius: 0px;
   padding: 0px;
 }
 
 .window-focused {
+  margin-top: 3px;
+  margin-bottom: 3px;
   border-top: 2px solid rgba(204, 204, 204, 1);
   border-right: 0px hidden;
   border-bottom: 2px hidden;
@@ -61,6 +63,8 @@
 }
 
 .window-unfocused {
+  margin-top: 3px;
+  margin-bottom: 3px;
   border-top: 2px solid rgba(255, 255, 255, 0);
   border-right: 0px hidden;
   border-bottom: 2px hidden;
@@ -68,6 +72,8 @@
 }
 
 .window-hidden {
+  margin-top: 3px;
+  margin-bottom: 3px;
   border-top: 2px solid rgba(255, 255, 255, 0);
   border-right: 0px hidden;
   border-bottom: 2px hidden;
@@ -75,8 +81,8 @@
 }
 
 .window-tooltip {
-  padding-left: 12px;
-  padding-right: 12px;
+  padding-left: 10px;
+  padding-right: 10px;
   padding-top: 4px;
   padding-bottom: 4px;
   background-color: rgba(0, 0, 0, 0.7);
@@ -84,4 +90,3 @@
   border: 1px solid rgba(0, 0, 0, 0.7);
   border-radius: 2px;
 }
-

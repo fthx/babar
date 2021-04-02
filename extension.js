@@ -40,7 +40,7 @@ var FAVORITES_ICON_NAME = 'starred-symbolic';
 var MOVE_TO_PREVIOUS_WORKSPACE_ICON_NAME = 'go-previous-symbolic';
 var MOVE_TO_NEXT_WORKSPACE_ICON_NAME = 'go-next-symbolic';
 var FALLBACK_ICON_NAME = 'applications-system-symbolic';
-var ICON_SIZE = 20;
+var ICON_SIZE = 18;
 var ROUNDED_WORKSPACES_BUTTONS = true;
 var TOOLTIP_VERTICAL_PADDING = 10;
 var HIDDEN_OPACITY = 127;
@@ -209,7 +209,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		this.workspaces_names_changed = this.workspaces_settings.connect(`changed::${WORKSPACES_KEY}`, this._update_workspaces_names.bind(this));
 		
 		// define windows that need an icon (see https://www.roojs.org/seed/gir-1.2-gtk-3.0/seed/Meta.WindowType.html)
-		this.window_type_whitelist = [Meta.WindowType.NORMAL];
+		this.window_type_whitelist = [Meta.WindowType.NORMAL, Meta.WindowType.DIALOG];
 		
 		// bar creation
 		this.ws_bar = new St.BoxLayout({});
@@ -374,7 +374,7 @@ class WorkspacesBar extends PanelMenu.Button {
 				w_box_icon.set_opacity(UNFOCUSED_OPACITY);
 				}
 		    }
-        
+
 		    // add button in task bar
 		    w_box.add_child(w_box_button);
 		    w_box.add_child(move_previous);
@@ -618,8 +618,8 @@ class Extension {
     enable() {    
     	// get settings
     	this._get_settings();
-    	
-    	// top panel left box padding
+
+		// top panel left box padding
     	if (REDUCE_PADDING) {
     		Main.panel._leftBox.add_style_class_name('leftbox-reduced-padding');
     	}
