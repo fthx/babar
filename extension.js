@@ -1,7 +1,7 @@
 /* 
 	BaBar
 	(c) Francois Thirioux 2021
-	GitHub contributors: @fthx, @wooque, @frandieguez, @kenoh
+	Contributors: @fthx, @wooque, @frandieguez, @kenoh, @justperfection
 	License GPL v3
 */
 
@@ -9,6 +9,7 @@
 const { Clutter, Gio, GLib, GObject, Meta, Shell, St } = imports.gi;
 
 const Main = imports.ui.main;
+const DND = imports.ui.dnd;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const AppFavorites = imports.ui.appFavorites;
@@ -37,11 +38,9 @@ var REDUCE_PADDING = true;
 var APP_GRID_ICON_NAME = 'view-app-grid-symbolic';
 var PLACES_ICON_NAME = 'folder-symbolic';
 var FAVORITES_ICON_NAME = 'starred-symbolic';
-var MOVE_TO_PREVIOUS_WORKSPACE_ICON_NAME = 'go-previous-symbolic';
-var MOVE_TO_NEXT_WORKSPACE_ICON_NAME = 'go-next-symbolic';
 var FALLBACK_ICON_NAME = 'applications-system-symbolic';
 var ICON_SIZE = 18;
-var ROUNDED_WORKSPACES_BUTTONS = true;
+var ROUNDED_WORKSPACES_BUTTONS = false;
 var TOOLTIP_VERTICAL_PADDING = 10;
 var HIDDEN_OPACITY = 127;
 var UNFOCUSED_OPACITY = 255;
@@ -52,7 +51,6 @@ var DISPLAY_ACTIVITIES = false;
 var DISPLAY_APP_GRID = true;
 var DISPLAY_PLACES_ICON = true;
 var DISPLAY_FAVORITES = true;
-var DISPLAY_WINDOW_CONTROL = false;
 var DISPLAY_WORKSPACES = true;
 var DISPLAY_TASKS = true;
 var DISPLAY_APP_MENU = false;
@@ -147,55 +145,6 @@ class FavoritesMenu extends PanelMenu.Button {
 	}
 });
 
-var WindowControlButton = GObject.registerClass(
-class WindowControlButton extends PanelMenu.Button {
-	_init() {
-		super._init(0.0, 'Babar-WindowControlButton');
-		
-		this.window_control_button = new St.BoxLayout({visible: true, reactive: true, can_focus: true, track_hover: true});
-		
-		this.window_control_button_previous = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
-		this.window_control_button_previous_icon = new St.Icon({icon_name: MOVE_TO_PREVIOUS_WORKSPACE_ICON_NAME, style_class: 'system-status-icon'});
-        this.window_control_button_previous.set_child(this.window_control_button_previous_icon);
-        this.window_control_button_previous.connect('button-press-event', this._move_to_previous_workspace.bind(this));
-        
-        this.window_control_button_next = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
-		this.window_control_button_next_icon = new St.Icon({icon_name: MOVE_TO_NEXT_WORKSPACE_ICON_NAME, style_class: 'system-status-icon'});
-        this.window_control_button_next.set_child(this.window_control_button_next_icon);
-        this.window_control_button_next.connect('button-press-event', this._move_to_next_workspace.bind(this));
-        
-        this.window_control_button.add_child(this.window_control_button_previous);
-        this.window_control_button.add_child(this.window_control_button_next);
-        this.add_child(this.window_control_button);
-	}
-	
-	// move focused window to next workspace (beware of possibly fixed number of ws)
-	_move_to_next_workspace() {
-		this.ws_count = WM.get_n_workspaces();
-        this.active_ws_index = WM.get_active_workspace_index();
-        this.focused_window = global.display.get_focus_window();
-        if (this.focused_window && this.active_ws_index < this.ws_count - 1) {
-        	this.focused_window.change_workspace_by_index(this.active_ws_index + 1, false);
-        	this.focused_window.activate(global.get_current_time());
-        }
-	}
-        
-    // move focused window to previous workspace
-	_move_to_previous_workspace() {
-		this.ws_count = WM.get_n_workspaces();
-        this.active_ws_index = WM.get_active_workspace_index();
-        this.focused_window = global.display.get_focus_window();
-        if (this.focused_window && this.active_ws_index > 0) {
-        	this.focused_window.change_workspace_by_index(this.active_ws_index - 1, false);
-        	this.focused_window.activate(global.get_current_time());
-        }
-	}
-	
-	_destroy() {
-		super.destroy();
-	}
-});
-
 var WorkspacesBar = GObject.registerClass(
 class WorkspacesBar extends PanelMenu.Button {
 	_init() {
@@ -271,9 +220,11 @@ class WorkspacesBar extends PanelMenu.Button {
 		// display all current workspaces and tasks buttons
         for (let ws_index = 0; ws_index < this.ws_count; ++ws_index) {
         	// workspace
-			var ws_box = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});						
-			var ws_box_label = new St.Label({y_align: Clutter.ActorAlign.CENTER});
+			let ws_box = new WorkspaceButton();
+			ws_box.number = ws_index;
+			let ws_box_label = new St.Label({y_align: Clutter.ActorAlign.CENTER});
 			
+			// rounded buttons option
 			if (!ROUNDED_WORKSPACES_BUTTONS) {
 				if (ws_index == this.active_ws_index) {
 					ws_box_label.style_class = 'workspace-active-squared';
@@ -288,13 +239,18 @@ class WorkspacesBar extends PanelMenu.Button {
 				}
 			}
 			
+			// workspace numbered label
 			if (this.workspaces_names[ws_index]) {
 				ws_box_label.set_text("  " + this.workspaces_names[ws_index] + "  ");
 			} else {
 				ws_box_label.set_text("  " + (ws_index + 1) + "  ");
 			}
 			ws_box.set_child(ws_box_label);
-			ws_box.connect('button-press-event', () => this._toggle_ws(ws_index));
+
+			// signal
+			ws_box.connect('button-release-event', () => this._toggle_ws(ws_index));
+
+			// add in task bar
 			if (DISPLAY_WORKSPACES) {
 	        	this.ws_bar.add_child(ws_box);
 	        }
@@ -318,32 +274,16 @@ class WorkspacesBar extends PanelMenu.Button {
     
     // create window button ; ws = workspace, w = window
     _create_window_button(ws_index, w) {    	
-    	// move to previous/next workspace buttons (will be shown on w button hover)
-    	var move_previous = new St.Bin({visible: false, reactive: true, can_focus: true, track_hover: true});
-    	var move_previous_icon = new St.Icon({icon_name: MOVE_TO_PREVIOUS_WORKSPACE_ICON_NAME, style_class: 'system-status-icon'});
-    	move_previous.set_child(move_previous_icon);
-    	
-    	var move_next = new St.Bin({visible: false, reactive: true, can_focus: true, track_hover: true});
-    	var move_next_icon = new St.Icon({icon_name: MOVE_TO_NEXT_WORKSPACE_ICON_NAME, style_class: 'system-status-icon'});
-    	move_next.set_child(move_next_icon);
-    	
-    	if (!w.is_on_all_workspaces()) {
-			move_previous.connect('button-press-event', () => this._move_to_previous_workspace(ws_index, w));
-			move_next.connect('button-press-event', () => this._move_to_next_workspace(ws_index, w));
-		}
-    	
         // windows on all workspaces have to be displayed only once
     	if (!w.is_on_all_workspaces() || ws_index == 0) {
 		    // create button
-			var w_box = new St.BoxLayout({visible: true, reactive: true, can_focus: true, track_hover: true, style_class: 'window-box'});
-		    var w_box_app = this.window_tracker.get_window_app(w);
-		    
-		    // arrows state
-		    w_box.arrows = false;
-		    
+			let w_box = new WindowButton();
+			w_box.window = w;
+			w_box.workspace_number = ws_index;
+		    let w_box_app = this.window_tracker.get_window_app(w);
+
 		    // create w button and its icon
-		    var w_box_button = new St.Bin({visible: true, reactive: true, can_focus: true, track_hover: true});
-		    var w_box_icon;
+		    let w_box_icon;
 		    if (w_box_app) {
 		    	w_box_icon = w_box_app.create_icon_texture(ICON_SIZE);
 		    }
@@ -351,8 +291,10 @@ class WorkspacesBar extends PanelMenu.Button {
 		    if (!w_box_icon || w_box_icon.get_style_class_name() == 'fallback-app-icon') {
 		    	w_box_icon = new St.Icon({icon_name: FALLBACK_ICON_NAME, icon_size: ICON_SIZE});
 			}
-			w_box_button.set_child(w_box_icon);
-			w_box_button.connect('button-press-event', (widget, event) => this._on_button_press(widget, event, w_box, ws_index, w));
+			w_box.set_child(w_box_icon);
+
+			// signals
+			w_box.connect('button-release-event', (widget, event) => this._on_button_press(widget, event, w_box, ws_index, w));
 			w_box.connect('notify::hover', () => this._on_button_hover(w_box, w.title));
 			
 			// desaturate option
@@ -363,22 +305,19 @@ class WorkspacesBar extends PanelMenu.Button {
 		    
 			// set icon style and opacity following window state
 		    if (w.is_hidden()) {
-				w_box_button.style_class = 'window-hidden';
+				w_box.style_class = 'window-hidden';
 				w_box_icon.set_opacity(HIDDEN_OPACITY);
 		    } else {
 				if (w.has_focus()) {
-				w_box_button.style_class = 'window-focused';
-				w_box_icon.set_opacity(FOCUSED_OPACITY);
+					w_box.style_class = 'window-focused';
+					w_box_icon.set_opacity(FOCUSED_OPACITY);
 				} else {
-				w_box_button.style_class = 'window-unfocused';
-				w_box_icon.set_opacity(UNFOCUSED_OPACITY);
+					w_box.style_class = 'window-unfocused';
+					w_box_icon.set_opacity(UNFOCUSED_OPACITY);
 				}
 		    }
 
-		    // add button in task bar
-		    w_box.add_child(w_box_button);
-		    w_box.add_child(move_previous);
-		   	w_box.add_child(move_next);
+		    // add in task bar
 		   	if (w.is_on_all_workspaces()) {
 		   		this.ws_bar.insert_child_at_index(w_box, 0);	
 		   	} else {
@@ -386,29 +325,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		    }
 		}
 	}
-	
-	// move window w from workspace ws to previous workspace
-	_move_to_previous_workspace(ws_index, w) {
-		if (ws_index > 0) {
-        	w.change_workspace_by_index(ws_index - 1, false);
-        	if (w.has_focus()) {
-        		w.activate(global.get_current_time());
-        	}
-        }
-        this.window_tooltip.hide();
-    }
-    
-    // move window w from workspace ws to next workspace
-	_move_to_next_workspace(ws_index, w) {
-		if (ws_index < this.ws_count - 1) {
-        	w.change_workspace_by_index(ws_index + 1, false);
-        	if (w.has_focus()) {
-        		w.activate(global.get_current_time());
-        	}
-        }
-        this.window_tooltip.hide();
-    }
-	
+
 	// on window w button press
     _on_button_press(widget, event, w_box, ws_index, w) {
     	// left-click: toggle window
@@ -428,25 +345,9 @@ class WorkspacesBar extends PanelMenu.Button {
 			}
 		}
 		
-		// right-click: toggle arrows
-		if (RIGHT_CLICK && event.get_button() == 3 && !w.is_on_all_workspaces()) {
-			if (!w_box.arrows) {
-				if (w_box.get_child_at_index(1)) {
-					w_box.get_child_at_index(1).show();
-				}
-				if (w_box.get_child_at_index(2)) {
-					w_box.get_child_at_index(2).show();
-				}
-				w_box.arrows = true;
-			} else {
-				if (w_box.get_child_at_index(1)) {
-					w_box.get_child_at_index(1).hide();
-				}
-				if (w_box.get_child_at_index(2)) {
-					w_box.get_child_at_index(2).hide();
-				}
-				w_box.arrows = false;
-			}
+		// TODO right-click: show window thumbnail
+		if (RIGHT_CLICK && event.get_button() == 3) {
+			// show window thumbnail
 		}
 		
 		// middle-click: close window
@@ -454,7 +355,6 @@ class WorkspacesBar extends PanelMenu.Button {
 			w.delete(global.get_current_time());
 			this.window_tooltip.hide();
 		}
-		
     }
     
     // sort windows by creation date
@@ -517,6 +417,58 @@ class WorkspacesBar extends PanelMenu.Button {
     }
 });
 
+var WorkspaceButton = GObject.registerClass(
+class WorkspaceButton extends St.Bin {
+	// make this object to accept a drop
+	_init() {
+		super._init({visible: true, reactive: true, can_focus: true, track_hover: true});
+
+		this._delegate = this;
+	}
+
+	acceptDrop(source) {
+		if ((!source instanceof WindowButton) || (source.workspace_number == this.number)) {
+			return false;
+		}
+		// move dropped window to according workspace
+		source.window.change_workspace_by_index(this.number, false);
+		if (source.window.has_focus()) {
+			source.window.activate(global.get_current_time());
+		}
+		return true;
+	}	
+});
+
+var WindowButton = GObject.registerClass(
+class WindowButton extends St.Bin {
+	// make this object draggable and droppable
+	_init() {
+		super._init({visible: true, reactive: true, can_focus: true, track_hover: true});
+
+		this._delegate = this;
+		this._draggable = DND.makeDraggable(this, {dragActorOpacity: HIDDEN_OPACITY});
+
+		this._draggable.connect('drag-end', this._cancel_drag.bind(this));
+		this._draggable.connect('drag-cancelled', this._cancel_drag.bind(this));
+	}
+
+	_cancel_drag() {
+		global.display.emit('restacked');
+	}
+
+	acceptDrop(source) {
+		if ((!source instanceof WindowButton) || (source.workspace_number == this.workspace_number)) {
+			return false;
+		}
+		// move dropped window to this window's workspace
+		source.window.change_workspace_by_index(this.workspace_number, false);
+		if (source.window.has_focus()) {
+			source.window.activate(global.get_current_time());
+		}
+		return true;
+	}
+});
+
 class Extension {
 	constructor() {
 	}
@@ -547,7 +499,6 @@ class Extension {
 		DISPLAY_APP_GRID = this.settings.get_boolean('display-app-grid');
 		DISPLAY_PLACES_ICON = this.settings.get_boolean('display-places-icon');
 		DISPLAY_FAVORITES = this.settings.get_boolean('display-favorites');
-		DISPLAY_WINDOW_CONTROL = this.settings.get_boolean('display-window-control');
 		DISPLAY_WORKSPACES = this.settings.get_boolean('display-workspaces');
 		DISPLAY_TASKS = this.settings.get_boolean('display-tasks');
 		DISPLAY_APP_MENU = this.settings.get_boolean('display-app-menu');
@@ -647,12 +598,6 @@ class Extension {
 			Main.panel.addToStatusArea('babar-favorites-menu', this.favorites_menu, 3, 'left');
 		}
 		
-		// window control
-		if (DISPLAY_WINDOW_CONTROL) {
-			this.window_control = new WindowControlButton();
-			Main.panel.addToStatusArea('babar-window-control', this.window_control, 4, 'left');
-		}
-		
 		// tasks
 		if (DISPLAY_TASKS) {
 			this.workspaces_bar = new WorkspacesBar();
@@ -685,11 +630,6 @@ class Extension {
     	if (DISPLAY_FAVORITES && this.favorites_menu) {
     		this.favorites_menu._destroy();
     	}
-    	
-    	// window control
-    	if (DISPLAY_WINDOW_CONTROL && this.window_control) {
-			this.window_control._destroy();
-		}
     	
     	// workspaces bar
     	if (DISPLAY_TASKS && this.workspaces_bar) {
@@ -731,4 +671,3 @@ class Extension {
 function init() {
 	return new Extension();
 }
-

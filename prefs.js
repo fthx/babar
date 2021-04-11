@@ -109,7 +109,6 @@ function buildPrefsWidget() {
 	make_item('Activities (false)', 'display-activities', 'b');
     make_item('Applications grid (true)', 'display-app-grid', 'b');
     make_item('Favorites menu (true)', 'display-favorites', 'b');
-    make_item('Move focused window to previous/next workspace (false)', 'display-window-control', 'b');
     make_item('Workspaces (true)', 'display-workspaces', 'b');
     make_item('Tasks (true)', 'display-tasks', 'b');
     make_item('Application menu (false)', 'display-app-menu', 'b');
@@ -129,7 +128,7 @@ function buildPrefsWidget() {
     
     make_section_title('Behaviour (default value)');
     
-    make_item('Right-click to show move-to-workspace arrows (true)', 'right-click', 'b');
+    make_item('Right-click to show window thumbnail TODO (true)', 'right-click', 'b');
     make_item('Middle-click to close window (true)', 'middle-click', 'b');
 	make_item('Sort favorites first (false)', 'favorites-first', 'b');
 	
