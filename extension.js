@@ -128,7 +128,22 @@ class FavoritesMenu extends PanelMenu.Button {
     		this.item.connect('activate', () => this._activate_fav(fav_index));
     		this.item.add_child(this.item_box);
     		this.menu.addMenuItem(this.item);
+
+			this.item.fav_index = fav_index;
+			this.item.is_babar_favorite = true;
+
+			this.item._delegate = this.item;
+			this.item._draggable = DND.makeDraggable(this.item, {dragActorOpacity: HIDDEN_OPACITY});
+
+			this.item._draggable.connect('drag-end', this._on_drag_end.bind(this));
+			this.item._draggable.connect('drag-cancelled', this._on_drag_end.bind(this));
     	}
+	}
+
+	// on drag cancelled or ended
+	_on_drag_end() {
+		this.menu.close();
+		this._display_favorites();
 	}
 	
 	// activate favorite
@@ -427,15 +442,22 @@ class WorkspaceButton extends St.Bin {
 	}
 
 	acceptDrop(source) {
-		if ((!source instanceof WindowButton) || (source.workspace_number == this.number)) {
-			return false;
+		// favorite menu item
+		if (source.is_babar_favorite) {
+			WM.get_workspace_by_index(this.number).activate(global.get_current_time());
+			AppFavorites.getAppFavorites().getFavorites()[source.fav_index].open_new_window(-1);
 		}
-		// move dropped window to according workspace
-		source.window.change_workspace_by_index(this.number, false);
-		if (source.window.has_focus()) {
-			source.window.activate(global.get_current_time());
+
+		// window button
+		if (source.is_babar_task && source.workspace_number !== this.number) {
+			source.window.change_workspace_by_index(this.number, false);
+			if (source.window.has_focus()) {
+				source.window.activate(global.get_current_time());
+			}
+			return true;
 		}
-		return true;
+
+		return false;
 	}	
 });
 
@@ -444,6 +466,8 @@ class WindowButton extends St.Bin {
 	// make this object draggable and droppable
 	_init() {
 		super._init({visible: true, reactive: true, can_focus: true, track_hover: true});
+
+		this.is_babar_task = true;
 
 		this._delegate = this;
 		this._draggable = DND.makeDraggable(this, {dragActorOpacity: HIDDEN_OPACITY});
@@ -457,15 +481,22 @@ class WindowButton extends St.Bin {
 	}
 
 	acceptDrop(source) {
-		if ((!source instanceof WindowButton) || (source.workspace_number == this.workspace_number)) {
-			return false;
+		// favorite menu item
+		if (source.is_babar_favorite) {
+			WM.get_workspace_by_index(this.workspace_number).activate(global.get_current_time());
+			AppFavorites.getAppFavorites().getFavorites()[source.fav_index].open_new_window(-1);
 		}
-		// move dropped window to this window's workspace
-		source.window.change_workspace_by_index(this.workspace_number, false);
-		if (source.window.has_focus()) {
-			source.window.activate(global.get_current_time());
+
+		// window button
+		if (source.is_babar_task && source.workspace_number !== this.workspace_number) {
+			source.window.change_workspace_by_index(this.workspace_number, false);
+			if (source.window.has_focus()) {
+				source.window.activate(global.get_current_time());
+			}
+			return true;
 		}
-		return true;
+
+		return false;
 	}
 });
 
