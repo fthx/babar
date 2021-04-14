@@ -126,7 +126,7 @@ function buildPrefsWidget() {
     make_item('Places icon (folder-symbolic)', 'places-icon-name', 's');
     make_item('Favorites icon (starred-symbolic)', 'favorites-icon-name', 's');
     
-    make_section_title('Behaviour (default value)');
+    make_section_title('Behavior (default value)');
     
     make_item('Right-click to show window thumbnail TODO (true)', 'right-click', 'b');
     make_item('Middle-click to close window (true)', 'middle-click', 'b');

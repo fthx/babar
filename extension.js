@@ -12,6 +12,8 @@ const Main = imports.ui.main;
 const DND = imports.ui.dnd;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
+const Dash = imports.ui.dash;
+const AppDisplay = imports.ui.appDisplay;
 const AppFavorites = imports.ui.appFavorites;
 const AppMenu = Main.panel.statusArea.appMenu;
 const WM = global.workspace_manager;
@@ -118,23 +120,19 @@ class FavoritesMenu extends PanelMenu.Button {
         // create favorites items
 		for (let fav_index = 0; fav_index < this.list_fav.length; ++fav_index) {
     		this.fav = this.list_fav[fav_index];
-    		this.fav_icon = this.fav.create_icon_texture(ICON_SIZE);
-    		this.fav_label = new St.Label({text: this.fav.get_name()});
-			
-    		this.item = new PopupMenu.PopupBaseMenuItem;
-    		this.item_box = new St.BoxLayout({style_class: 'favorite', vertical: false});
-    		this.item_box.add_child(this.fav_icon);
-    		this.item_box.add_child(this.fav_label);
-    		this.item.connect('activate', () => this._activate_fav(fav_index));
-    		this.item.add_child(this.item_box);
-    		this.menu.addMenuItem(this.item);
+    		this.fav_icon = this.fav.create_icon_texture(64);
 
+			this.item = new PopupMenu.PopupImageMenuItem(this.fav.get_name(), this.fav_icon.get_gicon());
+    		this.item.connect('activate', () => this._activate_fav(fav_index));
+    		this.menu.addMenuItem(this.item);
+			
+			// drag and drop
 			this.item.fav_index = fav_index;
 			this.item.is_babar_favorite = true;
 
 			this.item._delegate = this.item;
 			this.item._draggable = DND.makeDraggable(this.item, {dragActorOpacity: HIDDEN_OPACITY});
-
+			
 			this.item._draggable.connect('drag-end', this._on_drag_end.bind(this));
 			this.item._draggable.connect('drag-cancelled', this._on_drag_end.bind(this));
     	}
@@ -331,7 +329,7 @@ class WorkspacesBar extends PanelMenu.Button {
 					w_box_icon.set_opacity(UNFOCUSED_OPACITY);
 				}
 		    }
-
+			
 		    // add in task bar
 		   	if (w.is_on_all_workspaces()) {
 		   		this.ws_bar.insert_child_at_index(w_box, 0);	
@@ -360,9 +358,9 @@ class WorkspacesBar extends PanelMenu.Button {
 			}
 		}
 		
-		// TODO right-click: show window thumbnail
+		// TODO right-click: do something
 		if (RIGHT_CLICK && event.get_button() == 3) {
-			// show window thumbnail
+			// TODO
 		}
 		
 		// middle-click: close window
@@ -457,6 +455,22 @@ class WorkspaceButton extends St.Bin {
 			return true;
 		}
 
+		// dash button
+		if (source instanceof Dash.DashIcon) {
+			Main.overview.hide();
+			WM.get_workspace_by_index(this.number).activate(global.get_current_time());
+			source.app.open_new_window(-1);
+			return true;
+		}
+
+		// app grid button
+		if (source instanceof AppDisplay.AppIcon) {
+			Main.overview.hide();
+			WM.get_workspace_by_index(this.number).activate(global.get_current_time());
+			source.app.open_new_window(-1);
+			return true;
+		}
+
 		return false;
 	}	
 });
@@ -486,7 +500,7 @@ class WindowButton extends St.Bin {
 			WM.get_workspace_by_index(this.workspace_number).activate(global.get_current_time());
 			AppFavorites.getAppFavorites().getFavorites()[source.fav_index].open_new_window(-1);
 		}
-
+		
 		// window button
 		if (source.is_babar_task && source.workspace_number !== this.workspace_number) {
 			source.window.change_workspace_by_index(this.workspace_number, false);
@@ -495,7 +509,23 @@ class WindowButton extends St.Bin {
 			}
 			return true;
 		}
-
+		
+		// dash button
+		if (source instanceof Dash.DashIcon) {
+			Main.overview.hide();
+			WM.get_workspace_by_index(this.workspace_number).activate(global.get_current_time());
+			source.app.open_new_window(-1);
+			return true;
+		}
+		
+		// app grid button
+		if (source instanceof AppDisplay.AppIcon) {
+			Main.overview.hide();
+			WM.get_workspace_by_index(this.workspace_number).activate(global.get_current_time());
+			source.app.open_new_window(-1);
+			return true;
+		}
+		
 		return false;
 	}
 });
