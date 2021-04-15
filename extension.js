@@ -69,7 +69,7 @@ class AppGridButton extends PanelMenu.Button {
 		this.app_grid_button = new St.BoxLayout({visible: true, reactive: true, can_focus: true, track_hover: true});
 		this.app_grid_button.icon = new St.Icon({icon_name: APP_GRID_ICON_NAME, style_class: 'system-status-icon'});
         this.app_grid_button.add_child(this.app_grid_button.icon);
-		this.app_grid_button.connect('button-press-event', this._show_apps_page.bind(this));
+		this.app_grid_button.connect('button-release-event', this._show_apps_page.bind(this));
         this.add_child(this.app_grid_button);
 	}
 
@@ -181,20 +181,11 @@ class WorkspacesBar extends PanelMenu.Button {
         
 		// window thumbnail
 		if (RIGHT_CLICK) {
-			this.window_thumbnail = new St.Bin({style_class: 'window-thumbnail'});
-			this.window_thumbnail.clone = new Clutter.Clone({reactive: true});
-			this.window_thumbnail.set_child(this.window_thumbnail.clone);
-			this.window_thumbnail.hide();
-			this.window_thumbnail.visible = false;
-			Main.layoutManager.addChrome(this.window_thumbnail);
+			this.window_thumbnail = new WindowThumbnail();
 		}
 		
 		// window button tooltip
-        this.window_tooltip = new St.BoxLayout({style_class: 'window-tooltip'});
-		this.window_tooltip.label = new St.Label({y_align: Clutter.ActorAlign.CENTER, text: ""});
-		this.window_tooltip.add_child(this.window_tooltip.label);
-		this.window_tooltip.hide();
-		Main.layoutManager.addChrome(this.window_tooltip);
+		this.window_tooltip = new WindowTooltip();
         
         // signals
 		this._ws_number_changed = WM.connect('notify::n-workspaces', this._update_ws.bind(this));
@@ -229,6 +220,9 @@ class WorkspacesBar extends PanelMenu.Button {
 		}
 
 		if (this.window_thumbnail) {
+			if (this.window_thumbnail.timeout) {
+				GLib.source_remove(this.window_thumbnail.timeout);
+			}
 			this.window_thumbnail.destroy();
 		}
 
@@ -384,6 +378,7 @@ class WorkspacesBar extends PanelMenu.Button {
 			if (!this.window_thumbnail.visible || this.window_thumbnail.window_id !== w.get_id()) {
 				this.window_tooltip.hide();
 				this.window_thumbnail.window = w.get_compositor_private();
+
 				if (this.window_thumbnail.window && this.window_thumbnail.window.get_size()[0] && this.window_thumbnail.window.get_texture()) {
 					[this.window_thumbnail.width, this.window_thumbnail.height] = this.window_thumbnail.window.get_size();
 					this.window_thumbnail.max_width = THUMBNAIL_MAX_SIZE / 100 * global.display.get_size()[0];
@@ -400,15 +395,11 @@ class WorkspacesBar extends PanelMenu.Button {
 
 					// remove thumbnail content and hide thumbnail if its window is detroyed
 					this.window_thumbnail.destroy_signal = this.window_thumbnail.window.connect('destroy', () => {
-						this.window_thumbnail.clone.set_source(null);
-						this.window_thumbnail.hide();
-						this.window_thumbnail.visible = false;
+						this.window_thumbnail._remove();
 					});
 				}
 			} else {
-				this.window_thumbnail.clone.set_source(null);
-				this.window_thumbnail.hide();
-				this.window_thumbnail.visible = false;
+				this.window_thumbnail._remove();
 			}
 		}
 		
@@ -479,9 +470,56 @@ class WorkspacesBar extends PanelMenu.Button {
     }
 });
 
+var WindowTooltip = GObject.registerClass(
+class WindowTooltip extends St.BoxLayout {
+	_init() {
+		super._init({style_class: 'window-tooltip'});
+
+		this.label = new St.Label({y_align: Clutter.ActorAlign.CENTER, text: ""});
+		this.add_child(this.label);
+		this.hide();
+		Main.layoutManager.addChrome(this);
+	}
+});        
+
+var WindowThumbnail = GObject.registerClass(
+class WindowThumbnail extends St.Bin {
+	_init() {
+		super._init({visible: true, reactive: true, can_focus: true, track_hover: true, style_class: 'window-thumbnail'});
+
+		this.connect('button-release-event', this._remove.bind(this));
+
+		this._delegate = this;
+		this._draggable = DND.makeDraggable(this, {dragActorOpacity: HIDDEN_OPACITY});
+
+		this.saved_snap_back_animation_time = DND.SNAP_BACK_ANIMATION_TIME;
+
+		this._draggable.connect('drag-end', this._end_drag.bind(this));
+		this._draggable.connect('drag-cancelled', this._end_drag.bind(this));
+
+		this.clone = new Clutter.Clone({reactive: true});
+		this.set_child(this.clone);
+		this._remove();
+		Main.layoutManager.addChrome(this);
+	}
+
+	_remove() {
+		this.clone.set_source(null);
+		this.hide();
+		this.visible = false;
+	}
+
+	_end_drag() {
+		this.set_position(this._draggable._dragOffsetX + this._draggable._dragX, this._draggable._dragOffsetY + this._draggable._dragY);
+		DND.SNAP_BACK_ANIMATION_TIME = 0;
+		this.timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 0, () => {
+			DND.SNAP_BACK_ANIMATION_TIME = this.saved_snap_back_animation_time;
+		});
+	}
+});
+
 var WorkspaceButton = GObject.registerClass(
 class WorkspaceButton extends St.Bin {
-	// make this object to accept a drop
 	_init() {
 		super._init({visible: true, reactive: true, can_focus: true, track_hover: true});
 
@@ -526,7 +564,6 @@ class WorkspaceButton extends St.Bin {
 
 var WindowButton = GObject.registerClass(
 class WindowButton extends St.Bin {
-	// make this object draggable and droppable
 	_init() {
 		super._init({visible: true, reactive: true, can_focus: true, track_hover: true});
 
