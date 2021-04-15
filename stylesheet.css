@@ -82,3 +82,9 @@
   border: 1px solid rgba(0, 0, 0, 0.7);
   border-radius: 2px;
 }
+
+.window-thumbnail {
+  border: 1px solid rgba(0, 0, 0, 0.7);
+  border-radius: 2px;
+  background-color: rgba(204, 204, 204, 1);
+}

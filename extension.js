@@ -44,6 +44,7 @@ var FALLBACK_ICON_NAME = 'applications-system-symbolic';
 var ICON_SIZE = 18;
 var ROUNDED_WORKSPACES_BUTTONS = false;
 var TOOLTIP_VERTICAL_PADDING = 10;
+var THUMBNAIL_MAX_SIZE = 25;
 var HIDDEN_OPACITY = 127;
 var UNFOCUSED_OPACITY = 255;
 var FOCUSED_OPACITY = 255;
@@ -178,7 +179,17 @@ class WorkspacesBar extends PanelMenu.Button {
         this._update_workspaces_names();
         this.add_child(this.ws_bar);
         
-        // window button tooltip creation
+		// window thumbnail
+		if (RIGHT_CLICK) {
+			this.window_thumbnail = new St.Bin({style_class: 'window-thumbnail'});
+			this.window_thumbnail.clone = new Clutter.Clone({reactive: true});
+			this.window_thumbnail.set_child(this.window_thumbnail.clone);
+			this.window_thumbnail.hide();
+			this.window_thumbnail.visible = false;
+			Main.layoutManager.addChrome(this.window_thumbnail);
+		}
+		
+		// window button tooltip
         this.window_tooltip = new St.BoxLayout({style_class: 'window-tooltip'});
 		this.window_tooltip.label = new St.Label({y_align: Clutter.ActorAlign.CENTER, text: ""});
 		this.window_tooltip.add_child(this.window_tooltip.label);
@@ -196,21 +207,31 @@ class WorkspacesBar extends PanelMenu.Button {
 		if (this.workspaces_names_changed) {
 			this.workspaces_settings.disconnect(this.workspaces_names_changed);
 		}
+
 		if (this._ws_number_changed) {
 			WM.disconnect(this._ws_number_changed);
 		}
+
 		if (this._restacked) {
 			global.display.disconnect(this._restacked);
 		}
+
 		if (this._window_left_monitor) {
 			global.display.disconnect(this._window_left_monitor);
 		}
+
 		if (this.hide_tooltip_timeout) {
 			GLib.source_remove(this.hide_tooltip_timeout);
 		}
+
 		if (this.window_tooltip) {
 			this.window_tooltip.destroy();
 		}
+
+		if (this.window_thumbnail) {
+			this.window_thumbnail.destroy();
+		}
+
 		this.ws_bar.destroy();
 		super.destroy();
 	}
@@ -358,9 +379,37 @@ class WorkspacesBar extends PanelMenu.Button {
 			}
 		}
 		
-		// TODO right-click: do something
+		// right-click: display window thumbnail
 		if (RIGHT_CLICK && event.get_button() == 3) {
-			// TODO
+			if (!this.window_thumbnail.visible || this.window_thumbnail.window_id !== w.get_id()) {
+				this.window_tooltip.hide();
+				this.window_thumbnail.window = w.get_compositor_private();
+				if (this.window_thumbnail.window && this.window_thumbnail.window.get_size()[0] && this.window_thumbnail.window.get_texture()) {
+					[this.window_thumbnail.width, this.window_thumbnail.height] = this.window_thumbnail.window.get_size();
+					this.window_thumbnail.max_width = THUMBNAIL_MAX_SIZE / 100 * global.display.get_size()[0];
+					this.window_thumbnail.max_height = THUMBNAIL_MAX_SIZE / 100 * global.display.get_size()[1];
+					this.window_thumbnail.scale = Math.min(1.0, this.window_thumbnail.max_width / this.window_thumbnail.width, this.window_thumbnail.max_height / this.window_thumbnail.height);
+					
+					this.window_thumbnail.clone.set_source(this.window_thumbnail.window);
+					this.window_thumbnail.set_size(this.window_thumbnail.scale * this.window_thumbnail.width, this.window_thumbnail.scale * this.window_thumbnail.height);
+					this.window_thumbnail.clone.set_size(this.window_thumbnail.scale * this.window_thumbnail.width, this.window_thumbnail.scale * this.window_thumbnail.height);
+					this.window_thumbnail.set_position(w_box.get_transformed_position()[0], Main.layoutManager.primaryMonitor.y + Main.panel.height + TOOLTIP_VERTICAL_PADDING);
+					this.window_thumbnail.show();
+					this.window_thumbnail.visible = true;
+					this.window_thumbnail.window_id = w.get_id();
+
+					// remove thumbnail content and hide thumbnail if its window is detroyed
+					this.window_thumbnail.destroy_signal = this.window_thumbnail.window.connect('destroy', () => {
+						this.window_thumbnail.clone.set_source(null);
+						this.window_thumbnail.hide();
+						this.window_thumbnail.visible = false;
+					});
+				}
+			} else {
+				this.window_thumbnail.clone.set_source(null);
+				this.window_thumbnail.hide();
+				this.window_thumbnail.visible = false;
+			}
 		}
 		
 		// middle-click: close window
@@ -549,6 +598,7 @@ class Extension {
 		FAVORITES_ICON_NAME = this.settings.get_string('favorites-icon-name');
 		FALLBACK_ICON_NAME = this.settings.get_string('fallback-icon-name');
 		ICON_SIZE = this.settings.get_int('icon-size');
+		THUMBNAIL_MAX_SIZE = this.settings.get_int('thumbnail-max-size');
 		ROUNDED_WORKSPACES_BUTTONS = this.settings.get_boolean('rounded-workspaces-buttons');
 		TOOLTIP_VERTICAL_PADDING = this.settings.get_int('tooltip-vertical-padding');
 		HIDDEN_OPACITY = this.settings.get_int('hidden-opacity');
