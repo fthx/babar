@@ -26,6 +26,10 @@
 			<default>18</default>
 		</key>
 		
+		<key name="thumbnail-max-size" type="i">
+			<default>25</default>
+		</key>
+		
 		<key name="rounded-workspaces-buttons" type="b">
 			<default>false</default>
 		</key>
