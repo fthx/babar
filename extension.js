@@ -388,8 +388,8 @@ class WorkspacesBar extends PanelMenu.Button {
 					this.window_thumbnail.scale = Math.min(1.0, this.window_thumbnail.max_width / this.window_thumbnail.width, this.window_thumbnail.max_height / this.window_thumbnail.height);
 					
 					this.window_thumbnail.clone.set_source(this.window_thumbnail.window);
-					this.window_thumbnail.set_size(this.window_thumbnail.scale * this.window_thumbnail.width, this.window_thumbnail.scale * this.window_thumbnail.height);
 					this.window_thumbnail.clone.set_size(this.window_thumbnail.scale * this.window_thumbnail.width, this.window_thumbnail.scale * this.window_thumbnail.height);
+					this.window_thumbnail.set_size(this.window_thumbnail.scale * this.window_thumbnail.width, this.window_thumbnail.scale * this.window_thumbnail.height);
 					this.window_thumbnail.set_position(w_box.get_transformed_position()[0], Main.layoutManager.primaryMonitor.y + Main.panel.height + TOOLTIP_VERTICAL_PADDING);
 					this.window_thumbnail.show();
 					this.window_thumbnail.visible = true;
