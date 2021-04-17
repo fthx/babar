@@ -182,6 +182,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		// window thumbnail
 		if (RIGHT_CLICK) {
 			this.window_thumbnail = new WindowThumbnail();
+			this.window_thumbnail.overview = Main.overview.connect('showing', () => this.window_thumbnail._remove());
 		}
 		
 		// window button tooltip
@@ -220,6 +221,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		}
 
 		if (this.window_thumbnail) {
+			Main.overview.disconnect(this.window_thumbnail.overview);
 			if (this.window_thumbnail.timeout) {
 				GLib.source_remove(this.window_thumbnail.timeout);
 			}
@@ -393,9 +395,11 @@ class WorkspacesBar extends PanelMenu.Button {
 					this.window_thumbnail.visible = true;
 					this.window_thumbnail.window_id = w.get_id();
 
-					// remove thumbnail content and hide thumbnail if its window is detroyed
+					// remove thumbnail content and hide thumbnail if its window is destroyed
 					this.window_thumbnail.destroy_signal = this.window_thumbnail.window.connect('destroy', () => {
-						this.window_thumbnail._remove();
+						if (this.window_thumbnail && this.window_thumbnail.window) {
+							this.window_thumbnail._remove();
+						}
 					});
 				}
 			} else {
@@ -504,7 +508,9 @@ class WindowThumbnail extends St.Bin {
 	}
 
 	_remove() {
-		this.clone.set_source(null);
+		if (this.clone) {
+			this.clone.set_source(null);
+		}
 		this.hide();
 		this.visible = false;
 	}
