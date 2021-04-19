@@ -390,14 +390,14 @@ class WorkspacesBar extends PanelMenu.Button {
 					this.window_thumbnail.clone.set_source(this.window_thumbnail.window);
 					this.window_thumbnail.clone.set_size(this.window_thumbnail.scale * this.window_thumbnail.width, this.window_thumbnail.scale * this.window_thumbnail.height);
 					this.window_thumbnail.set_size(this.window_thumbnail.scale * this.window_thumbnail.width, this.window_thumbnail.scale * this.window_thumbnail.height);
+
 					this.window_thumbnail.set_position(w_box.get_transformed_position()[0], Main.layoutManager.primaryMonitor.y + Main.panel.height + TOOLTIP_VERTICAL_PADDING);
 					this.window_thumbnail.show();
-					this.window_thumbnail.visible = true;
 					this.window_thumbnail.window_id = w.get_id();
 
 					// remove thumbnail content and hide thumbnail if its window is destroyed
 					this.window_thumbnail.destroy_signal = this.window_thumbnail.window.connect('destroy', () => {
-						if (this.window_thumbnail && this.window_thumbnail.window) {
+						if (this.window_thumbnail.window) {
 							this.window_thumbnail._remove();
 						}
 					});
@@ -512,7 +512,6 @@ class WindowThumbnail extends St.Bin {
 			this.clone.set_source(null);
 		}
 		this.hide();
-		this.visible = false;
 	}
 
 	_end_drag() {
