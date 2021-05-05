@@ -34,6 +34,7 @@ var WORKSPACES_SCHEMA = "org.gnome.desktop.wm.preferences";
 var WORKSPACES_KEY = "workspace-names";
 
 // initial fallback settings
+var WORKSPACES_RIGHT_CLICK = false;
 var RIGHT_CLICK = true;
 var MIDDLE_CLICK = true;
 var REDUCE_PADDING = true;
@@ -283,7 +284,7 @@ class WorkspacesBar extends PanelMenu.Button {
 			ws_box.set_child(ws_box_label);
 
 			// signal
-			ws_box.connect('button-release-event', () => this._toggle_ws(ws_index));
+			ws_box.connect('button-release-event', (widget, event) => this._toggle_ws(widget, event, ws_index));
 
 			// add in task bar
 			if (DISPLAY_WORKSPACES) {
@@ -454,12 +455,30 @@ class WorkspacesBar extends PanelMenu.Button {
 	}
 
     // toggle or show overview
-    _toggle_ws(ws_index) {
-		if (ws_index == WM.get_active_workspace_index()) {
-			Main.overview.toggle();
+    _toggle_ws(widget, event, ws_index) {
+		if (WORKSPACES_RIGHT_CLICK) {
+			// left click: show workspace
+			if (event.get_button() == 1) {
+				WM.get_workspace_by_index(ws_index).activate(global.get_current_time());
+				Main.overview.hide();
+			}
+
+			// right click: show workspace's overview
+			if (event.get_button() == 3) {
+				if (ws_index == WM.get_active_workspace_index()) {
+					Main.overview.toggle();
+				} else {
+					WM.get_workspace_by_index(ws_index).activate(global.get_current_time());
+					Main.overview.show();
+				}
+			}
 		} else {
-			WM.get_workspace_by_index(ws_index).activate(global.get_current_time());
-			Main.overview.show();
+			if (ws_index == WM.get_active_workspace_index()) {
+				Main.overview.toggle();
+			} else {
+				WM.get_workspace_by_index(ws_index).activate(global.get_current_time());
+				Main.overview.show();
+			}
 		}
     }
     
@@ -638,6 +657,7 @@ class Extension {
         this.settings_already_changed = false;
 		this.settings_changed = this.settings.connect('changed', this._settings_changed.bind(this));
 		
+		WORKSPACES_RIGHT_CLICK = this.settings.get_boolean('workspaces-right-click');
 		RIGHT_CLICK = this.settings.get_boolean('right-click');
 		MIDDLE_CLICK = this.settings.get_boolean('middle-click');
 		REDUCE_PADDING = this.settings.get_boolean('reduce-padding');

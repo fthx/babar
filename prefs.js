@@ -129,9 +129,10 @@ function buildPrefsWidget() {
     
     make_section_title('Behavior (default value)');
     
-    make_item('Right-click to show window thumbnail (true)', 'right-click', 'b');
-    make_item('Middle-click to close window (true)', 'middle-click', 'b');
-	make_item('Sort favorites first (false)', 'favorites-first', 'b');
+	make_item('Workspaces: left click to show, right-click to show or toggle overview (false)', 'workspaces-right-click', 'b');
+    make_item('Tasks: right-click to show window thumbnail (true)', 'right-click', 'b');
+    make_item('Tasks: middle-click to close window (true)', 'middle-click', 'b');
+	make_item('Tasks: sort favorites first (false)', 'favorites-first', 'b');
 	
     // return widget
     return this.prefsWidget;
