@@ -102,6 +102,10 @@
 			<default>true</default>
 		</key>
 		
+		<key name="workspaces-right-click" type="b">
+			<default>false</default>
+		</key>
+		
 		<key name="favorites-first" type="b">
 			<default>false</default>
 		</key>
