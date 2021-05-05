@@ -168,15 +168,15 @@ class WorkspacesBar extends PanelMenu.Button {
 		this.window_tracker = Shell.WindowTracker.get_default();
 		
 		// define gsettings schema for workspaces names, get workspaces names, signal for settings key changed
-		this.workspaces_settings = new Gio.Settings({schema: WORKSPACES_SCHEMA});
-		this.workspaces_names_changed = this.workspaces_settings.connect(`changed::${WORKSPACES_KEY}`, this._update_workspaces_names.bind(this));
+		this.ws_settings = new Gio.Settings({schema: WORKSPACES_SCHEMA});
+		this.ws_names_changed = this.ws_settings.connect(`changed::${WORKSPACES_KEY}`, this._update_ws_names.bind(this));
 		
 		// define windows that need an icon (see https://www.roojs.org/seed/gir-1.2-gtk-3.0/seed/Meta.WindowType.html)
 		this.window_type_whitelist = [Meta.WindowType.NORMAL, Meta.WindowType.DIALOG];
 		
 		// bar creation
 		this.ws_bar = new St.BoxLayout({});
-        this._update_workspaces_names();
+        this._update_ws_names();
         this.add_child(this.ws_bar);
         
 		// window thumbnail
@@ -190,18 +190,23 @@ class WorkspacesBar extends PanelMenu.Button {
         
         // signals
 		this._ws_number_changed = WM.connect('notify::n-workspaces', this._update_ws.bind(this));
+		this._active_ws_changed = WM.connect('active-workspace-changed', this._update_ws.bind(this));
 		this._restacked = global.display.connect('restacked', this._update_ws.bind(this));
 		this._window_left_monitor = global.display.connect('window-left-monitor', this._update_ws.bind(this));
 	}
 
 	// remove signals, restore Activities button, destroy workspaces bar
 	_destroy() {
-		if (this.workspaces_names_changed) {
-			this.workspaces_settings.disconnect(this.workspaces_names_changed);
+		if (this.ws_names_changed) {
+			this.ws_settings.disconnect(this.ws_names_changed);
 		}
 
 		if (this._ws_number_changed) {
 			WM.disconnect(this._ws_number_changed);
+		}
+
+		if (this._active_ws_changed) {
+			WM.disconnect(this._active_ws_changed);
 		}
 
 		if (this._restacked) {
@@ -233,8 +238,8 @@ class WorkspacesBar extends PanelMenu.Button {
 	}
 	
 	// update workspaces names
-	_update_workspaces_names() {
-		this.workspaces_names = this.workspaces_settings.get_strv(WORKSPACES_KEY);
+	_update_ws_names() {
+		this.ws_names = this.ws_settings.get_strv(WORKSPACES_KEY);
 		this._update_ws();
 	}
 
@@ -270,8 +275,8 @@ class WorkspacesBar extends PanelMenu.Button {
 			}
 			
 			// workspace numbered label
-			if (this.workspaces_names[ws_index]) {
-				ws_box_label.set_text("  " + this.workspaces_names[ws_index] + "  ");
+			if (this.ws_names[ws_index]) {
+				ws_box_label.set_text("  " + this.ws_names[ws_index] + "  ");
 			} else {
 				ws_box_label.set_text("  " + (ws_index + 1) + "  ");
 			}
@@ -360,6 +365,7 @@ class WorkspacesBar extends PanelMenu.Button {
     _on_button_press(widget, event, w_box, ws_index, w) {
     	// left-click: toggle window
     	if (event.get_button() == 1) {
+			this.window_tooltip.hide();
 			if (w.has_focus() && !Main.overview.visible) {
 				if (w.can_minimize()) {
 		   			w.minimize();
@@ -397,7 +403,7 @@ class WorkspacesBar extends PanelMenu.Button {
 
 					// remove thumbnail content and hide thumbnail if its window is destroyed
 					this.window_thumbnail.destroy_signal = this.window_thumbnail.window.connect('destroy', () => {
-						if (this.window_thumbnail.window) {
+						if (this.window_thumbnail) {
 							this.window_thumbnail._remove();
 						}
 					});
@@ -715,12 +721,12 @@ class Extension {
 	}
 	
 	// toggle workspaces thumbnails in overview
-	_hide_workspaces_thumbnails() {
+	_hide_ws_thumbnails() {
 		Main.overview._overview._controls._thumbnailsBox.hide();
 	}
 
     enable() {    
-    	// get settings
+		// get settings
     	this._get_settings();
 
 		// top panel left box padding
@@ -769,7 +775,7 @@ class Extension {
 		
 		// workspaces thumbnails
 		if (!DISPLAY_WORKSPACES_THUMBNAILS) {
-			this.showing_overview = Main.overview.connect('showing', this._hide_workspaces_thumbnails.bind(this));
+			this.showing_overview = Main.overview.connect('showing', this._hide_ws_thumbnails.bind(this));
 		}
     }
 
