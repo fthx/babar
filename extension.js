@@ -194,6 +194,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		this._active_ws_changed = WM.connect('active-workspace-changed', this._update_ws.bind(this));
 		this._restacked = global.display.connect('restacked', this._update_ws.bind(this));
 		this._window_left_monitor = global.display.connect('window-left-monitor', this._update_ws.bind(this));
+		this._window_entered_monitor = global.display.connect('window-entered-monitor', this._update_ws.bind(this));
 	}
 
 	// remove signals, restore Activities button, destroy workspaces bar
@@ -216,6 +217,10 @@ class WorkspacesBar extends PanelMenu.Button {
 
 		if (this._window_left_monitor) {
 			global.display.disconnect(this._window_left_monitor);
+		}
+
+		if (this._window_entered_monitor) {
+			global.display.disconnect(this._window_entered_monitor);
 		}
 
 		if (this.hide_tooltip_timeout) {
