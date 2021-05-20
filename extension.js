@@ -306,7 +306,7 @@ class WorkspacesBar extends PanelMenu.Button {
 			}
 	        for (let window_index = 0; window_index < this.ws_current.windows.length; ++window_index) {
 	        	this.window = this.ws_current.windows[window_index];
-	        	if (this.window && this.window_type_whitelist.includes(this.window.get_window_type())) {
+	        	if (this.window && !this.window.is_skip_taskbar() && this.window_type_whitelist.includes(this.window.get_window_type())) {
 	        		this._create_window_button(ws_index, this.window);
 	        	}
 	        }
