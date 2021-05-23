@@ -164,7 +164,7 @@ var WorkspacesBar = GObject.registerClass(
 class WorkspacesBar extends PanelMenu.Button {
 	_init() {
 		super._init(0.0, 'Babar-Tasks');
-		
+
 		// tracker for windows
 		this.window_tracker = Shell.WindowTracker.get_default();
 		
@@ -192,14 +192,15 @@ class WorkspacesBar extends PanelMenu.Button {
         // signals
 		this._ws_number_changed = WM.connect('notify::n-workspaces', this._update_ws.bind(this));
 		this._active_ws_changed = WM.connect('active-workspace-changed', this._update_ws.bind(this));
+		this._windows_changed = this.window_tracker.connect('tracked-windows-changed', this._update_ws.bind(this));
 		this._restacked = global.display.connect('restacked', this._update_ws.bind(this));
-		this._window_left_monitor = global.display.connect('window-left-monitor', this._update_ws.bind(this));
-		this._window_entered_monitor = global.display.connect('window-entered-monitor', this._update_ws.bind(this));
+		//this._window_left_monitor = global.display.connect('window-left-monitor', this._update_ws.bind(this));
+		//this._window_entered_monitor = global.display.connect('window-entered-monitor', this._update_ws.bind(this));
 	}
 
 	// remove signals, restore Activities button, destroy workspaces bar
 	_destroy() {
-		if (this.ws_names_changed) {
+		if (this.ws_settings && this.ws_names_changed) {
 			this.ws_settings.disconnect(this.ws_names_changed);
 		}
 
@@ -211,17 +212,21 @@ class WorkspacesBar extends PanelMenu.Button {
 			WM.disconnect(this._active_ws_changed);
 		}
 
+		if (this.window_tracker && this._windows_changed) {
+			this.window_tracker.disconnect(this._windows_changed);
+		}
+
 		if (this._restacked) {
 			global.display.disconnect(this._restacked);
 		}
 
-		if (this._window_left_monitor) {
-			global.display.disconnect(this._window_left_monitor);
-		}
+		//if (this._window_left_monitor) {
+		//	global.display.disconnect(this._window_left_monitor);
+		//}
 
-		if (this._window_entered_monitor) {
-			global.display.disconnect(this._window_entered_monitor);
-		}
+		//if (this._window_entered_monitor) {
+		//	global.display.disconnect(this._window_entered_monitor);
+		//}
 
 		if (this.hide_tooltip_timeout) {
 			GLib.source_remove(this.hide_tooltip_timeout);
@@ -251,7 +256,7 @@ class WorkspacesBar extends PanelMenu.Button {
 
 	// update the workspaces bar
     _update_ws() {
-    	// destroy old workspaces bar buttons and signals
+		// destroy old workspaces bar buttons and signals
     	this.ws_bar.destroy_all_children();
     	
     	// get number of workspaces
