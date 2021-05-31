@@ -61,6 +61,8 @@ var DISPLAY_APP_MENU = false;
 var DISPLAY_DASH = true;
 var DISPLAY_WORKSPACES_THUMBNAILS = true;
 
+let extension;
+
 
 var AppGridButton = GObject.registerClass(
 class AppGridButton extends PanelMenu.Button {
@@ -658,6 +660,7 @@ class WindowButton extends St.Bin {
 
 class Extension {
 	constructor() {
+		extension = this;
 	}
 	
 	// get settings
@@ -697,10 +700,13 @@ class Extension {
     
     // restart extension after settings changed
     _settings_changed() {
-    	if (!this.settings_already_changed) {
+    	extension.disable();
+    	extension.enable();
+    	/*if (!this.settings_already_changed) {
     		Main.notify("Please restart BaBar extension to apply changes.");
     		this.settings_already_changed = true;
-    	}
+
+    	}*/
     }    
     
     // toggle Activities button

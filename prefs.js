@@ -4,6 +4,7 @@ const { Gio, Gtk } = imports.gi;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+const is_shell_version_40 = imports.misc.config.PACKAGE_VERSION.split('.')[0] >= 40;
 
 
 function init() {
@@ -12,19 +13,29 @@ function init() {
 function make_item(label, schema, type, min, max) {
     this.item_label = new Gtk.Label({
         label: label,
+        margin_start: 14,
         halign: Gtk.Align.START,
         visible: true
     });
-    prefsWidget.attach(this.item_label, 0, row, 1, 1);
+    let grid = new Gtk.Grid({
+    	visible: true,
+    	margin_start: 18,
+        margin_end: 18,
+    	margin_top: 2,
+    	margin_bottom: 2,
+    	column_spacing: 96
+    });
+    grid.attach(this.item_label, 0, 0, 1, 1);
 
 	if (type == 'b') {
 		this.item_value = new Gtk.Switch({
 		    active: this.settings.get_boolean(schema),
 		    halign: Gtk.Align.END,
+		    hexpand: true,
 		    visible: true
 		});
 		
-		prefsWidget.attach(this.item_value, 1, this.row, 1, 1);
+		grid.attach(this.item_value, 1, 0, 1, 1);
 
     	this.settings.bind(
 		    schema,
@@ -44,10 +55,11 @@ function make_item(label, schema, type, min, max) {
 			adjustment: this.item_adjustment,
 			value: this.settings.get_int(schema),
 		    halign: Gtk.Align.END,
+		    hexpand: true,
 		    visible: true
 		});
 		
-		prefsWidget.attach(this.item_value, 1, this.row, 1, 1);
+		grid.attach(this.item_value, 1, 0, 1, 1);
 
 		this.settings.bind(
 		    schema,
@@ -61,10 +73,11 @@ function make_item(label, schema, type, min, max) {
 		this.item_value = new Gtk.Entry({
 			text: this.settings.get_string(schema),
 		    halign: Gtk.Align.END,
+		    hexpand: true,
 		    visible: true
 		});
 		
-		prefsWidget.attach(this.item_value, 1, this.row, 1, 1);
+		grid.attach(this.item_value, 1, 0, 1, 1);
 
 		this.settings.bind(
 		    schema,
@@ -73,8 +86,7 @@ function make_item(label, schema, type, min, max) {
 		    Gio.SettingsBindFlags.DEFAULT
 		);
 	}
-        
-    this.row += 1;
+    this.list[is_shell_version_40 ? 'append' : 'add'](grid);
 }
 
 function make_section_title(title) {
@@ -82,26 +94,34 @@ function make_section_title(title) {
         label: '<b>' + title + '</b>',
         halign: Gtk.Align.START,
         use_markup: true,
-        visible: true
+        margin_start: 8,
+        margin_top: 2,
+    	margin_bottom: 2,
+        visible: true,
     });
-    prefsWidget.attach(this.section_title, 0, this.row, 2, 1);
+    this.list[is_shell_version_40 ? 'append' : 'add'](this.section_title);
     
-    this.row += 1;
 }
 
 function buildPrefsWidget() {
 	this.settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.babar');
-        
-    this.prefsWidget = new Gtk.Grid({
-		'margin-start': 18,
-        'margin-end': 18,
-        'margin-top': 18,
-        'margin-bottom': 18,
-        'column-spacing': 96,
-        'row-spacing': 8,
+
+	this.prefsWidget = new Gtk.ScrolledWindow({
+		visible: true,
+		margin_start: 18,
+        margin_end: 18,
+        margin_top: 18,
+        margin_bottom: 18,
+        vexpand: true,
+		hscrollbar_policy: Gtk.PolicyType.NEVER,
+		vscrollbar_policy: Gtk.PolicyType.AUTOMATIC
+	});
+    this.list = new Gtk.ListBox({
+        selection_mode: null,
+        can_focus: false,
         visible: true
     });
-    this.row = 0;
+    this.prefsWidget[is_shell_version_40 ? 'set_child' : 'add'](this.list);
 
 	// items
     make_section_title('Elements (default value)');
