@@ -331,14 +331,7 @@ class WorkspacesBar extends PanelMenu.Button {
 		    let w_box_app = this.window_tracker.get_window_app(w);
 
 		    // create w button and its icon
-		    let w_box_icon;
-		    if (w_box_app) {
-		    	w_box_icon = w_box_app.create_icon_texture(ICON_SIZE);
-		    }
-		    // sometimes no icon is defined or icon is void, at least for a short time
-		    if (!w_box_icon || w_box_icon.get_style_class_name() == 'fallback-app-icon') {
-		    	w_box_icon = new St.Icon({icon_name: FALLBACK_ICON_NAME, icon_size: ICON_SIZE});
-			}
+		    let w_box_icon = this._create_window_icon(w_box_app, w_box.window);
 			w_box.set_child(w_box_icon);
 
 			// signals
@@ -372,6 +365,22 @@ class WorkspacesBar extends PanelMenu.Button {
 		    	this.ws_bar.add_child(w_box);
 		    }
 		}
+	}
+
+	// create window icon with fallbacks; app = app, w = metawindow
+	_create_window_icon(app, w) {
+		let icon;
+		if (app) {
+			icon = app.create_icon_texture(ICON_SIZE);
+		}
+		// sometimes no icon is defined or icon is void, at least for a short time
+		if (!icon || icon.get_style_class_name() == 'fallback-app-icon') {
+			icon = new St.Icon({icon_name: FALLBACK_ICON_NAME, icon_size: ICON_SIZE});
+			// Attempt to use the window icon in place of the app's icon.
+			let textureCache = St.TextureCache.get_default();
+			icon.set_gicon(textureCache.bind_cairo_surface_property(w, 'icon'));
+		}
+		return icon;
 	}
 
 	// on window w button press
