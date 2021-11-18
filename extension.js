@@ -16,6 +16,7 @@ const Dash = imports.ui.dash;
 const AppDisplay = imports.ui.appDisplay;
 const AppFavorites = imports.ui.appFavorites;
 const AppMenu = Main.panel.statusArea.appMenu;
+const PanelBox = Main.layoutManager.panelBox;
 const WM = global.workspace_manager;
 const Util = imports.misc.util;
 const ExtensionUtils = imports.misc.extensionUtils;
@@ -50,6 +51,7 @@ var HIDDEN_OPACITY = 127;
 var UNFOCUSED_OPACITY = 255;
 var FOCUSED_OPACITY = 255;
 var DESATURATE_ICONS = false;
+var BOTTOM_PANEL = false;
 var FAVORITES_FIRST = false;
 var DISPLAY_ACTIVITIES = false;
 var DISPLAY_APP_GRID = true;
@@ -670,7 +672,17 @@ class WindowButton extends St.Bin {
 class Extension {
 	constructor() {
 		extension = this;
+		// Register callbacks to be notified about changes
+		let monitorManager = Meta.MonitorManager.get();
+		this._monitorsChanged = monitorManager.connect('monitors-changed', () => this.set_panel_position());
+		this._panelHeightChanged = PanelBox.connect("notify::height", () => this.set_panel_position());
 	}
+
+	destroy() {
+        let monitorManager = Meta.MonitorManager.get();
+        monitorManager.disconnect(this._monitorsChanged);
+        PanelBox.disconnect(this._panelHeightChanged)
+    }
 	
 	// get settings
     _get_settings() {
@@ -695,6 +707,7 @@ class Extension {
 		UNFOCUSED_OPACITY = this.settings.get_int('unfocused-opacity');
 		FOCUSED_OPACITY = this.settings.get_int('focused-opacity');
 		DESATURATE_ICONS = this.settings.get_boolean('desaturate-icons');
+		BOTTOM_PANEL = this.settings.get_boolean('bottom-panel');
 		FAVORITES_FIRST = this.settings.get_boolean('favorites-first');
 		DISPLAY_ACTIVITIES = this.settings.get_boolean('display-activities');
 		DISPLAY_APP_GRID = this.settings.get_boolean('display-app-grid');
@@ -764,6 +777,22 @@ class Extension {
 			Main.overview.dash.hide();
 		}
 	}
+
+	// set panel poistion according to the settings
+	set_panel_position() {
+		if (BOTTOM_PANEL) {
+			let monitor = Main.layoutManager.primaryMonitor;
+    		PanelBox.set_position(monitor.x, (monitor.x + monitor.height - PanelBox.height));
+		} else {
+			this.reset_panel_position()
+		}
+	}
+
+	// restore panel position to the top
+	reset_panel_position() {
+		let monitor = Main.layoutManager.primaryMonitor;
+        PanelBox.set_position(monitor.x, monitor.y);
+	}
 	
 	// toggle workspaces thumbnails in overview
 	_hide_ws_thumbnails() {
@@ -773,6 +802,9 @@ class Extension {
     enable() {    
 		// get settings
     	this._get_settings();
+
+    	// adjust panel position to top or bottom edge of the screen
+    	this.set_panel_position();
 
 		// top panel left box padding
     	if (REDUCE_PADDING) {
@@ -844,6 +876,9 @@ class Extension {
     	if (REDUCE_PADDING) {
     		Main.panel._leftBox.remove_style_class_name('leftbox-reduced-padding');
     	}
+
+    	// restore panel position
+    	this.reset_panel_position();
     	
     	// Places label and unwatch extensions changes
     	if (DISPLAY_PLACES_ICON && this.places_indicator) {
