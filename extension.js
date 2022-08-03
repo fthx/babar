@@ -45,6 +45,7 @@ var FAVORITES_ICON_NAME = 'starred-symbolic';
 var FALLBACK_ICON_NAME = 'applications-system-symbolic';
 var ICON_SIZE = 18;
 var ROUNDED_WORKSPACES_BUTTONS = false;
+var PLAIN_WORKSPACES_BUTTONS = false;
 var TOOLTIP_VERTICAL_PADDING = 10;
 var THUMBNAIL_MAX_SIZE = 25;
 var HIDDEN_OPACITY = 127;
@@ -273,22 +274,31 @@ class WorkspacesBar extends PanelMenu.Button {
 			let ws_box = new WorkspaceButton();
 			ws_box.number = ws_index;
 			let ws_box_label = new St.Label({y_align: Clutter.ActorAlign.CENTER});
-			
-			// rounded buttons option
-			if (!ROUNDED_WORKSPACES_BUTTONS) {
+
+            // plain buttons option
+			if (PLAIN_WORKSPACES_BUTTONS) {
 				if (ws_index == this.active_ws_index) {
-					ws_box_label.style_class = 'workspace-active-squared';
+					ws_box_label.style_class = 'workspace-active-plain';
 				} else {
-					ws_box_label.style_class = 'workspace-inactive-squared';
+					ws_box_label.style_class = 'workspace-inactive-plain';
 				}
 			} else {
-				if (ws_index == this.active_ws_index) {
-					ws_box_label.style_class = 'workspace-active-rounded';
-				} else {
-					ws_box_label.style_class = 'workspace-inactive-rounded';
-				}
+			    // rounded buttons option
+			    if (!ROUNDED_WORKSPACES_BUTTONS) {
+				    if (ws_index == this.active_ws_index) {
+					    ws_box_label.style_class = 'workspace-active-squared';
+				    } else {
+					    ws_box_label.style_class = 'workspace-inactive-squared';
+				    }
+			    } else {
+				    if (ws_index == this.active_ws_index) {
+					    ws_box_label.style_class = 'workspace-active-rounded';
+				    } else {
+					    ws_box_label.style_class = 'workspace-inactive-rounded';
+				    }
+			    }
 			}
-			
+
 			// workspace numbered label
 			if (this.ws_names[ws_index]) {
 				ws_box_label.set_text("  " + this.ws_names[ws_index] + "  ");
@@ -702,6 +712,7 @@ class Extension {
 		ICON_SIZE = this.settings.get_int('icon-size');
 		THUMBNAIL_MAX_SIZE = this.settings.get_int('thumbnail-max-size');
 		ROUNDED_WORKSPACES_BUTTONS = this.settings.get_boolean('rounded-workspaces-buttons');
+		PLAIN_WORKSPACES_BUTTONS = this.settings.get_boolean('plain-workspaces-buttons');
 		TOOLTIP_VERTICAL_PADDING = this.settings.get_int('tooltip-vertical-padding');
 		HIDDEN_OPACITY = this.settings.get_int('hidden-opacity');
 		UNFOCUSED_OPACITY = this.settings.get_int('unfocused-opacity');
