@@ -140,6 +140,7 @@ function buildPrefsWidget() {
     make_item('Reduce elements padding (true)', 'reduce-padding', 'b');
     make_item('Places extension label to icon (true)', 'display-places-icon', 'b');
     make_item('Rounded workspaces icons (false)', 'rounded-workspaces-buttons', 'b');
+    make_item('Plain workspaces icons (false)', 'plain-workspaces-buttons', 'b');
     make_item('Remove color from tasks icons (false)', 'desaturate-icons', 'b');
     make_item('Move panel to the bottom of the screen (false)', 'bottom-panel', 'b');
     make_item('Task icon size (18: Shell <= 3.38, 20: Shell >= 40)', 'icon-size', 'i', 8, 64);
