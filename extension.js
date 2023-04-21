@@ -683,13 +683,15 @@ class Extension {
 	constructor() {
 		extension = this;
 		// Register callbacks to be notified about changes
-		let monitorManager = Meta.MonitorManager.get();
+		//HGS Changed to use internal wrapper for MonitorManager.get to work under Gnome 44
+		let monitorManager = getMonitorManager();
 		this._monitorsChanged = monitorManager.connect('monitors-changed', () => this.set_panel_position());
 		this._panelHeightChanged = PanelBox.connect("notify::height", () => this.set_panel_position());
 	}
 
 	destroy() {
-        let monitorManager = Meta.MonitorManager.get();
+	//HGS Fix for G44
+        let monitorManager = getMonitorManager();
         monitorManager.disconnect(this._monitorsChanged);
         PanelBox.disconnect(this._panelHeightChanged)
     }
@@ -920,4 +922,14 @@ class Extension {
 
 function init() {
 	return new Extension();
+}
+
+//HGS Added to circumvent Meta.MonitorManager
+// Provide internal wrapper for MonitorManager.get to work under Gnome 44
+// Copied from https://github.com/micheleg/dash-to-dock/commit/ec2ba66febd2195b7ae1cd25b413b6da2a17f6a8
+function getMonitorManager() {
+    if (global.backend.get_monitor_manager !== undefined)
+        return global.backend.get_monitor_manager();
+    else
+        return Meta.MonitorManager.get();
 }
