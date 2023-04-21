@@ -3,6 +3,6 @@
   "name": "BaBar Task Bar", 
   "shell-version": ["3.36", "3.38", "40", "41", "42", "43","44", "45"], 
   "url": "https://github.com/hseliger/babar", 
-  "uuid": "babar@fthx", 
+  "uuid": "babar@hseliger", 
   "version": 56
 }
