@@ -1,3 +1,5 @@
+**ARCHIVED** *as I will not update this for Gnome 45 anymore, no time and seems to much work*. But of course, if someone finds the time and manages to update, that would be great!!
+
 # BaBar
 GNOME Shell extension
 
