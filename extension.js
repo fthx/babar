@@ -5,29 +5,28 @@
 	License GPL v3
 */
 
+import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
+import St from 'gi://St';
 
-const { Clutter, Gio, GLib, GObject, Meta, Shell, St } = imports.gi;
-
-const Main = imports.ui.main;
-const DND = imports.ui.dnd;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
-const Dash = imports.ui.dash;
-const AppDisplay = imports.ui.appDisplay;
-const AppFavorites = imports.ui.appFavorites;
-const AppMenu = Main.panel.statusArea.appMenu;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as Dash from 'resource:///org/gnome/shell/ui/dash.js';
+import * as AppDisplay from 'resource:///org/gnome/shell/ui/appDisplay.js';
+import * as AppFavorites from 'resource:///org/gnome/shell/ui/appFavorites.js';
+//const AppMenu = Main.panel.statusArea.appMenu;
 const PanelBox = Main.layoutManager.panelBox;
 const WM = global.workspace_manager;
-const Util = imports.misc.util;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-
-// get Shell version
-var is_shell_version_40 = imports.misc.config.PACKAGE_VERSION.split('.')[0] >= 40;
+import * as Util from 'resource:///org/gnome/shell/misc/util.js';
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 // translation needed to restore Places label, if any
-const Gettext = imports.gettext.domain('gnome-shell-extensions');
-const _ = Gettext.gettext;
 const N_ = x => x;
 
 // workspaces names from native schema
@@ -83,11 +82,7 @@ class AppGridButton extends PanelMenu.Button {
 		if (Main.overview.visible) {
 			Main.overview.hide();
 		} else {
-			if (is_shell_version_40) {
-				Main.overview.showApps();
-			} else {
-				Main.overview.viewSelector._toggleAppsPage();
-			}
+			Main.overview.showApps();
 		}
 	}
 	
@@ -106,9 +101,6 @@ class FavoritesMenu extends PanelMenu.Button {
     	this.fav_menu_button = new St.BoxLayout({});
 		this.fav_menu_icon = new St.Icon({icon_name: FAVORITES_ICON_NAME, style_class: 'system-status-icon'});
         this.fav_menu_button.add_child(this.fav_menu_icon);
-		if (!is_shell_version_40) {
-			this.fav_menu_button.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
-		}
         this.add_child(this.fav_menu_button);
 
 		this._display_favorites();
@@ -679,24 +671,27 @@ class WindowButton extends St.Bin {
 	}
 });
 
-class Extension {
-	constructor() {
+export default class BBExtension extends Extension {
+	constructor(metadata) {
+		super(metadata);
 		extension = this;
 		// Register callbacks to be notified about changes
-		let monitorManager = Meta.MonitorManager.get();
+		//HGS Changed to use internal wrapper for MonitorManager.get to work under Gnome 44
+		let monitorManager = getMonitorManager();
 		this._monitorsChanged = monitorManager.connect('monitors-changed', () => this.set_panel_position());
 		this._panelHeightChanged = PanelBox.connect("notify::height", () => this.set_panel_position());
 	}
 
 	destroy() {
-        let monitorManager = Meta.MonitorManager.get();
+	//HGS Fix for G44
+        let monitorManager = getMonitorManager();
         monitorManager.disconnect(this._monitorsChanged);
         PanelBox.disconnect(this._panelHeightChanged)
     }
 	
 	// get settings
     _get_settings() {
-        this.settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.babar');
+        this.settings = this.getSettings('org.gnome.shell.extensions.babar');
         
         this.settings_already_changed = false;
 		this.settings_changed = this.settings.connect('changed', this._settings_changed.bind(this));
@@ -757,7 +752,7 @@ class Extension {
 	// toggle Places Status Indicator extension label to folder	
 	_show_places_icon(show_icon) {
 		this.places_indicator = Main.panel.statusArea['places-menu'];
-		if (this.places_indicator && is_shell_version_40) {
+		if (this.places_indicator) {
 			this.places_indicator.remove_child(this.places_indicator.get_first_child());
 			if (show_icon) {
 				this.places_icon = new St.Icon({icon_name: PLACES_ICON_NAME, style_class: 'system-status-icon'});
@@ -765,17 +760,6 @@ class Extension {
 			} else {
 				this.places_label = new St.Label({text: _('Places'), y_expand: true, y_align: Clutter.ActorAlign.CENTER});
 				this.places_indicator.add_child(this.places_label);
-			}
-		}
-		if (this.places_indicator && !is_shell_version_40) {
-			this.places_box = this.places_indicator.get_first_child();
-			this.places_box.remove_child(this.places_box.get_first_child());
-			if (show_icon) {
-				this.places_icon = new St.Icon({icon_name: PLACES_ICON_NAME, style_class: 'system-status-icon'});
-				this.places_box.insert_child_at_index(this.places_icon, 0);
-			} else {
-				this.places_label = new St.Label({text: _('Places'), y_expand: true, y_align: Clutter.ActorAlign.CENTER});
-				this.places_box.insert_child_at_index(this.places_label, 0);
 			}
 		}
 	}
@@ -852,9 +836,9 @@ class Extension {
 		}
 		
 		// AppMenu
-    	if (!DISPLAY_APP_MENU) {
-			AppMenu.container.hide();
-		}
+    	// if (!DISPLAY_APP_MENU) {
+		// 	AppMenu.container.hide();
+		// }
 		
 		// dash
 		if (!DISPLAY_DASH) {
@@ -901,9 +885,9 @@ class Extension {
     	this._show_activities(true);
     	
     	// AppMenu icon
-    	if (!Main.overview.visible && !Main.sessionMode.isLocked) {
-			AppMenu.container.show();
-		}
+    	// if (!Main.overview.visible && !Main.sessionMode.isLocked) {
+		// 	AppMenu.container.show();
+		// }
 		
 		// dash
 		this._show_dash(true);
@@ -918,6 +902,12 @@ class Extension {
     }
 }
 
-function init() {
-	return new Extension();
+//HGS Added to circumvent Meta.MonitorManager
+// Provide internal wrapper for MonitorManager.get to work under Gnome 44
+// Copied from https://github.com/micheleg/dash-to-dock/commit/ec2ba66febd2195b7ae1cd25b413b6da2a17f6a8
+function getMonitorManager() {
+    if (global.backend.get_monitor_manager !== undefined)
+        return global.backend.get_monitor_manager();
+    else
+        return Meta.MonitorManager.get();
 }

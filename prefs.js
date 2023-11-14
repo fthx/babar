@@ -1,11 +1,7 @@
 // Preferences UI for BaBar GNOME Shell extension
 
-const { Gio, Gtk } = imports.gi;
-
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-const is_shell_version_40 = imports.misc.config.PACKAGE_VERSION.split('.')[0] >= 40;
-
+import Gio from 'gi://Gio';
+import Gtk from 'gi://Gtk';
 
 function init() {
 }
@@ -86,7 +82,7 @@ function make_item(label, schema, type, min, max) {
 		    Gio.SettingsBindFlags.DEFAULT
 		);
 	}
-    this.list[is_shell_version_40 ? 'append' : 'add'](grid);
+    this.list['append'](grid);
 }
 
 function make_section_title(title) {
@@ -99,7 +95,7 @@ function make_section_title(title) {
     	margin_bottom: 2,
         visible: true,
     });
-    this.list[is_shell_version_40 ? 'append' : 'add'](this.section_title);
+    this.list['append'](this.section_title);
     
 }
 
@@ -121,7 +117,7 @@ function buildPrefsWidget() {
         can_focus: false,
         visible: true
     });
-    this.prefsWidget[is_shell_version_40 ? 'set_child' : 'add'](this.list);
+    this.prefsWidget['set_child'](this.list);
 
 	// items
     make_section_title('Elements (default value)');
