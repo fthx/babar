@@ -23,7 +23,6 @@ import * as AppFavorites from 'resource:///org/gnome/shell/ui/appFavorites.js';
 const AppMenu = Main.panel.statusArea.appMenu;
 const PanelBox = Main.layoutManager.panelBox;
 const WM = global.workspace_manager;
-const Util = imports.misc.util;
 import * as Util from 'resource:///org/gnome/shell/misc/util.js';
 
 // translation needed to restore Places label, if any
