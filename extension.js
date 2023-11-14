@@ -5,22 +5,26 @@
 	License GPL v3
 */
 
+import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import GObject from 'gi://GObject';
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
+import St from 'gi://St';
 
-const { Clutter, Gio, GLib, GObject, Meta, Shell, St } = imports.gi;
-
-const Main = imports.ui.main;
-const DND = imports.ui.dnd;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
-const Dash = imports.ui.dash;
-const AppDisplay = imports.ui.appDisplay;
-const AppFavorites = imports.ui.appFavorites;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
+import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
+import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
+import * as Dash from 'resource:///org/gnome/shell/ui/dash.js';
+import * as AppDisplay from 'resource:///org/gnome/shell/ui/appDisplay.js';
+import * as AppFavorites from 'resource:///org/gnome/shell/ui/appFavorites.js';
 const AppMenu = Main.panel.statusArea.appMenu;
 const PanelBox = Main.layoutManager.panelBox;
 const WM = global.workspace_manager;
 const Util = imports.misc.util;
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
+import * as Util from 'resource:///org/gnome/shell/misc/util.js';
 
 // translation needed to restore Places label, if any
 const Gettext = imports.gettext.domain('gnome-shell-extensions');
@@ -669,7 +673,7 @@ class WindowButton extends St.Bin {
 	}
 });
 
-class Extension {
+export default class Extension {
 	constructor() {
 		extension = this;
 		// Register callbacks to be notified about changes
@@ -897,10 +901,6 @@ class Extension {
 		// unwatch settings
 		this.settings.disconnect(this.settings_changed);
     }
-}
-
-function init() {
-	return new Extension();
 }
 
 //HGS Added to circumvent Meta.MonitorManager

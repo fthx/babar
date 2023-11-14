@@ -1,9 +1,7 @@
 // Preferences UI for BaBar GNOME Shell extension
 
-const { Gio, Gtk } = imports.gi;
-
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
+import Gio from 'gi://Gio';
+import Gtk from 'gi://Gtk';
 
 function init() {
 }
