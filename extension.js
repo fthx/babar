@@ -22,9 +22,6 @@ const Util = imports.misc.util;
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
 
-// get Shell version
-var is_shell_version_40 = imports.misc.config.PACKAGE_VERSION.split('.')[0] >= 40;
-
 // translation needed to restore Places label, if any
 const Gettext = imports.gettext.domain('gnome-shell-extensions');
 const _ = Gettext.gettext;
@@ -83,11 +80,7 @@ class AppGridButton extends PanelMenu.Button {
 		if (Main.overview.visible) {
 			Main.overview.hide();
 		} else {
-			if (is_shell_version_40) {
-				Main.overview.showApps();
-			} else {
-				Main.overview.viewSelector._toggleAppsPage();
-			}
+			Main.overview.showApps();
 		}
 	}
 	
@@ -106,9 +99,6 @@ class FavoritesMenu extends PanelMenu.Button {
     	this.fav_menu_button = new St.BoxLayout({});
 		this.fav_menu_icon = new St.Icon({icon_name: FAVORITES_ICON_NAME, style_class: 'system-status-icon'});
         this.fav_menu_button.add_child(this.fav_menu_icon);
-		if (!is_shell_version_40) {
-			this.fav_menu_button.add_child(PopupMenu.arrowIcon(St.Side.BOTTOM));
-		}
         this.add_child(this.fav_menu_button);
 
 		this._display_favorites();
@@ -759,7 +749,7 @@ class Extension {
 	// toggle Places Status Indicator extension label to folder	
 	_show_places_icon(show_icon) {
 		this.places_indicator = Main.panel.statusArea['places-menu'];
-		if (this.places_indicator && is_shell_version_40) {
+		if (this.places_indicator) {
 			this.places_indicator.remove_child(this.places_indicator.get_first_child());
 			if (show_icon) {
 				this.places_icon = new St.Icon({icon_name: PLACES_ICON_NAME, style_class: 'system-status-icon'});
@@ -767,17 +757,6 @@ class Extension {
 			} else {
 				this.places_label = new St.Label({text: _('Places'), y_expand: true, y_align: Clutter.ActorAlign.CENTER});
 				this.places_indicator.add_child(this.places_label);
-			}
-		}
-		if (this.places_indicator && !is_shell_version_40) {
-			this.places_box = this.places_indicator.get_first_child();
-			this.places_box.remove_child(this.places_box.get_first_child());
-			if (show_icon) {
-				this.places_icon = new St.Icon({icon_name: PLACES_ICON_NAME, style_class: 'system-status-icon'});
-				this.places_box.insert_child_at_index(this.places_icon, 0);
-			} else {
-				this.places_label = new St.Label({text: _('Places'), y_expand: true, y_align: Clutter.ActorAlign.CENTER});
-				this.places_box.insert_child_at_index(this.places_label, 0);
 			}
 		}
 	}
