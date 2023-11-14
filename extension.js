@@ -20,14 +20,13 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as Dash from 'resource:///org/gnome/shell/ui/dash.js';
 import * as AppDisplay from 'resource:///org/gnome/shell/ui/appDisplay.js';
 import * as AppFavorites from 'resource:///org/gnome/shell/ui/appFavorites.js';
-const AppMenu = Main.panel.statusArea.appMenu;
+//const AppMenu = Main.panel.statusArea.appMenu;
 const PanelBox = Main.layoutManager.panelBox;
 const WM = global.workspace_manager;
 import * as Util from 'resource:///org/gnome/shell/misc/util.js';
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 // translation needed to restore Places label, if any
-const Gettext = imports.gettext.domain('gnome-shell-extensions');
-const _ = Gettext.gettext;
 const N_ = x => x;
 
 // workspaces names from native schema
@@ -672,8 +671,9 @@ class WindowButton extends St.Bin {
 	}
 });
 
-export default class Extension {
-	constructor() {
+export default class BBExtension extends Extension {
+	constructor(metadata) {
+		super(metadata);
 		extension = this;
 		// Register callbacks to be notified about changes
 		//HGS Changed to use internal wrapper for MonitorManager.get to work under Gnome 44
@@ -691,7 +691,7 @@ export default class Extension {
 	
 	// get settings
     _get_settings() {
-        this.settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.babar');
+        this.settings = this.getSettings('org.gnome.shell.extensions.babar');
         
         this.settings_already_changed = false;
 		this.settings_changed = this.settings.connect('changed', this._settings_changed.bind(this));
@@ -836,9 +836,9 @@ export default class Extension {
 		}
 		
 		// AppMenu
-    	if (!DISPLAY_APP_MENU) {
-			AppMenu.container.hide();
-		}
+    	// if (!DISPLAY_APP_MENU) {
+		// 	AppMenu.container.hide();
+		// }
 		
 		// dash
 		if (!DISPLAY_DASH) {
@@ -885,9 +885,9 @@ export default class Extension {
     	this._show_activities(true);
     	
     	// AppMenu icon
-    	if (!Main.overview.visible && !Main.sessionMode.isLocked) {
-			AppMenu.container.show();
-		}
+    	// if (!Main.overview.visible && !Main.sessionMode.isLocked) {
+		// 	AppMenu.container.show();
+		// }
 		
 		// dash
 		this._show_dash(true);
